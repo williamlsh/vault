@@ -10,10 +10,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// server implements VaultServer interface.
-type server struct{}
+// service implements VaultServer interface.
+type service struct{}
 
-func (server) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
+func (service) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(hr.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func (server) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, e
 	return &pb.HashResponse{Hash: string(hash)}, nil
 }
 
-func (server) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
+func (service) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(vr.Hash), []byte(vr.Password))
 	if err != nil {
 		return nil, err
@@ -30,8 +30,8 @@ func (server) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.Validat
 }
 
 // NewServer returns a new VaultServer.
-func NewServer() pb.VaultServer {
-	return server{}
+func NewService() pb.VaultServer {
+	return service{}
 }
 
 // decodeHashRequest is helper function dictated by Go kit to decode hash

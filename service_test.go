@@ -7,16 +7,16 @@ import (
 )
 
 func TestHasherService(t *testing.T) {
-	svr := NewServer()
+	srv := NewService()
 	ctx := context.Background()
 
 	hr := pb.HashRequest{Password: "password"}
-	h, err := svr.Hash(ctx, &hr)
+	h, err := srv.Hash(ctx, &hr)
 	if err != nil {
 		t.Errorf("hash: %v", err)
 	}
 
-	response, err := svr.Validate(ctx, &pb.ValidateRequest{Password: "password", Hash: h.Hash})
+	response, err := srv.Validate(ctx, &pb.ValidateRequest{Password: "password", Hash: h.Hash})
 	if err != nil {
 		t.Errorf("validate: %v", err)
 	}
@@ -24,7 +24,7 @@ func TestHasherService(t *testing.T) {
 		t.Error("expected true from Valid")
 	}
 
-	response, err = svr.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
+	response, err = srv.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
 	if err != nil {
 		t.Errorf("validate: %v", err)
 	}
