@@ -13,6 +13,7 @@ message HashRequest {
 
 message HashResponse {
   string hash = 1;
+  string err = 2;
 }
 
 message ValidateRequest {
