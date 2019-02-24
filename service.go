@@ -3,24 +3,31 @@ package vault
 import (
 	"context"
 
+	"vault/pb"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
-// service implements VaultServer interface.
-type service struct{}
+// server implements VaultServer interface.
+type server struct{}
 
-func (service) Hash(ctx context.Context, password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func (server) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(hr.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(hash), nil
+	return &pb.HashResponse{Hash: string(hash)}, nil
 }
 
-func (service) Validate(ctx context.Context, password, hash string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func (server) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(vr.Hash), []byte(vr.Password))
 	if err != nil {
-		return false, nil
+		return nil, err
 	}
-	return true, nil
+	return &pb.ValidateResponse{Valid: true}, nil
+}
+
+// NewServer returns a new VaultServer.
+func NewServer() pb.VaultServer {
+	return server{}
 }
