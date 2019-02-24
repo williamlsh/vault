@@ -11,6 +11,22 @@ type grpcServer struct {
 	hash, validate grpctransport.Handler
 }
 
+// NewGRPCServer gets a new pb.VaultServer.
+func NewGRPCServer(ctx context.Context, endpoints Endpoints) pb.VaultServer {
+	return &grpcServer{
+		hash: grpctransport.NewServer(
+			endpoints.HashEndpoint,
+			DecodeGRPCHashRequest,
+			EncodeGRPCHashResponse,
+		),
+		validate: grpctransport.NewServer(
+			endpoints.ValidateEndpoint,
+			DecodeGRPCValidateRequest,
+			EncodeGRPCValidateResponse,
+		),
+	}
+}
+
 func (s *grpcServer) Hash(ctx context.Context, r *pb.HashRequest) (*pb.HashResponse, error) {
 	_, resp, err := s.hash.ServeGRPC(ctx, r)
 	if err != nil {
