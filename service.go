@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"vault/pb"
@@ -85,4 +86,35 @@ func MakeValidateEndpoint(srv pb.VaultServer) endpoint.Endpoint {
 		}
 		return h, nil
 	}
+}
+
+// Endpoints represents all endpoints for VaultServer service.
+type Endpoints struct {
+	HashEndpoint, ValidateEndpoint endpoint.Endpoint
+}
+
+// Hash uses the HashEndpoint to hash a password.
+func (e Endpoints) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
+	resp, err := e.HashEndpoint(ctx, hr)
+	if err != nil {
+		return nil, err
+	}
+	hashResp := resp.(*pb.HashResponse)
+	if hashResp == nil {
+		return nil, errors.New("hash request failed")
+	}
+	return hashResp, nil
+}
+
+// Validate uses the ValidateEndpoint to validate a password and a hash pair.
+func (e Endpoints) Validate(ctx context.Context, hr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
+	resp, err := e.ValidateEndpoint(ctx, hr)
+	if err != nil {
+		return nil, err
+	}
+	validateResp := resp.(*pb.ValidateResponse)
+	if validateResp == nil {
+		return nil, errors.New("validate request failed")
+	}
+	return validateResp, nil
 }
