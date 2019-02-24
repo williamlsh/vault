@@ -3,33 +3,28 @@ package vault
 import (
 	"context"
 	"testing"
-	"vault/pb"
 )
 
 func TestHasherService(t *testing.T) {
 	srv := NewService()
 	ctx := context.Background()
-
-	hr := pb.HashRequest{Password: "password"}
-	h, err := srv.Hash(ctx, &hr)
+	h, err := srv.Hash(ctx, "password")
 	if err != nil {
 		t.Errorf("hash: %v", err)
 	}
-
-	resp, err := srv.Validate(ctx, &pb.ValidateRequest{Password: "password", Hash: h.Hash})
+	ok, err := srv.Validate(ctx, "password", h)
 	if err != nil {
 		t.Errorf("validate: %v", err)
 	}
-	if !resp.Valid {
-		t.Error("expected true from Valid")
+	if !ok {
+		t.Error("expected true from Validate")
 	}
 
-	resp, err = srv.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
-	if err == nil {
-		t.Errorf("validate: %v", err)
+	ok, err := srv.Validate(ctx, "wrong password", h)
+	if err != nil {
+		t.Errorf("Validate: %v", err)
 	}
-	t.SkipNow()
-	if resp.Valid {
-		t.Error("expected false from Valid")
+	if ok {
+		t.Error("expected false from Validate")
 	}
 }
