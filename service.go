@@ -73,3 +73,15 @@ func MakeHashEndpoint(srv pb.VaultServer) endpoint.Endpoint {
 		return h, nil
 	}
 }
+
+// MakeValidateEndpoint turns Validate to Go kit Endpoint
+func MakeValidateEndpoint(srv pb.VaultServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		r := request.(*pb.ValidateRequest)
+		h, err := srv.Validate(ctx, r)
+		if err != nil {
+			return nil, err
+		}
+		return h, nil
+	}
+}
