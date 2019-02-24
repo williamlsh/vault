@@ -16,19 +16,19 @@ func TestHasherService(t *testing.T) {
 		t.Errorf("hash: %v", err)
 	}
 
-	response, err := srv.Validate(ctx, &pb.ValidateRequest{Password: "password", Hash: h.Hash})
+	resp, err := srv.Validate(ctx, &pb.ValidateRequest{Password: "password", Hash: h.Hash})
 	if err != nil {
 		t.Errorf("validate: %v", err)
 	}
-	if !response.Valid {
+	if !resp.Valid {
 		t.Error("expected true from Valid")
 	}
 
-	response, err = srv.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
+	resp, err = srv.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
 	if err != nil {
 		t.Errorf("validate: %v", err)
 	}
-	if !response.Valid {
+	if !resp.Valid {
 		t.Error("expected false from Valid")
 	}
 }
