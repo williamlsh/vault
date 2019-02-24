@@ -2,6 +2,8 @@ package vault
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"vault/pb"
 
@@ -30,4 +32,30 @@ func (server) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.Validat
 // NewServer returns a new VaultServer.
 func NewServer() pb.VaultServer {
 	return server{}
+}
+
+// decodeHashRequest is helper function dictated by Go kit to decode hash
+// request for Hash. The original signature from Go kit is http.DecodeRequestFunc.
+func decodeHashRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var hr *pb.HashRequest
+	err := json.NewDecoder(r.Body).Decode(hr)
+	if err != nil {
+		return nil, err
+	}
+	return hr, nil
+}
+
+// decodeValidateRequest is a helper function for Validate.
+func decodeValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var vr *pb.ValidateRequest
+	err := json.NewDecoder(r.Body).Decode(vr)
+	if err != nil {
+		return nil, err
+	}
+	return vr, nil
+}
+
+// encodeResponse is a helper function for Go kit.
+func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
 }
