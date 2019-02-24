@@ -10,11 +10,11 @@ import (
 // NewHTTPServer makes a new Vault HTTP service.
 func NewHTTPServer(ctx context.Context, endpoints Endpoints) http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("/hash", httptransport.NewServer(ctx, endpoints.HashEndpoint,
+	mux.Handle("/hash", httptransport.NewServer(endpoints.HashEndpoint,
 		decodeHashRequest,
 		encodeResponse,
 	))
-	mux.Handle("/validate", httptransport.NewServer(ctx,
+	mux.Handle("/validate", httptransport.NewServer(
 		endpoints.ValidateEndpoint,
 		decodeValidateRequest,
 		encodeResponse,

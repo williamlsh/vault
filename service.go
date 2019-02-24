@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
@@ -24,7 +25,7 @@ func NewService() Service {
 }
 
 func (vaultService) Hash(ctx context.Context, password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
@@ -32,11 +33,11 @@ func (vaultService) Hash(ctx context.Context, password string) (string, error) {
 }
 
 func (vaultService) Validate(ctx context.Context, password, hash string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword(password, password, hash)
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
 		return false, nil
 	}
-	return string(hash), nil
+	return true, nil
 }
 
 type hashRequest struct {
@@ -45,7 +46,7 @@ type hashRequest struct {
 
 type hashResponse struct {
 	Hash string `json:"hash"`
-	Err  error  `json:"err,omitempty"`
+	Err  string `json:"err,omitempty"`
 }
 
 // decodeHashRequest is a helper function that will decode the JSON body of
@@ -66,8 +67,8 @@ type validateRequest struct {
 }
 
 type validateResponse struct {
-	Valid bool  `json:"valid"`
-	Err   error `json:"err,omitempty"`
+	Valid bool   `json:"valid"`
+	Err   string `json:"err,omitempty"`
 }
 
 func decodeValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
@@ -99,7 +100,7 @@ func MakeHashEndpoint(srv Service) endpoint.Endpoint {
 func MakeValidateEndpoint(srv Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(validateRequest)
-		v, err := srv.Hash(ctx, req.Password, req.Hash)
+		v, err := srv.Validate(ctx, req.Password, req.Hash)
 		if err != nil {
 			return validateResponse{false, err.Error()}, nil
 		}
@@ -109,7 +110,7 @@ func MakeValidateEndpoint(srv Service) endpoint.Endpoint {
 
 // Endpoints represents all endpoints for the vaultService.
 type Endpoints struct {
-	HashEndpoint, ValidEndpoint endpoint.Endpoint
+	HashEndpoint, ValidateEndpoint endpoint.Endpoint
 }
 
 // Hash uses the HashEndpoint to hash a password.
@@ -120,22 +121,22 @@ func (e Endpoints) Hash(ctx context.Context, password string) (string, error) {
 		return "", err
 	}
 	hashResp := resp.(hashResponse)
-	if err := hashResp.Err(); err != "" {
-		return "", err
+	if hashResp.Err != "" {
+		return "", errors.New(hashResp.Err)
 	}
 	return hashResp.Hash, nil
 }
 
 // Validate uses the ValidEndpoint to validate a password a hash pair.
-func (e Endpoints) Validate(ctx context.Context, password, hash string) (string, error) {
+func (e Endpoints) Validate(ctx context.Context, password, hash string) (bool, error) {
 	req := validateRequest{Password: password, Hash: hash}
-	resp, err := e.ValidEndpoint(ctx, req)
+	resp, err := e.ValidateEndpoint(ctx, req)
 	if err != nil {
 		return false, err
 	}
 	validateResp := resp.(validateResponse)
-	if err := validateResp.Err(); err != "" {
-		return "", err
+	if validateResp.Err != "" {
+		return false, errors.New(validateResp.Err)
 	}
 	return validateResp.Valid, nil
 }
