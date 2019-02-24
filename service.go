@@ -63,12 +63,13 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 }
 
 // MakeHashEndpoint turns Hash to a Go kit Endpoint.
+// Never return error in transport layer.
 func MakeHashEndpoint(srv pb.VaultServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		r := request.(*pb.HashRequest)
 		h, err := srv.Hash(ctx, r)
 		if err != nil {
-			return nil, err
+			return nil, nil
 		}
 		return h, nil
 	}
@@ -80,7 +81,7 @@ func MakeValidateEndpoint(srv pb.VaultServer) endpoint.Endpoint {
 		r := request.(*pb.ValidateRequest)
 		h, err := srv.Validate(ctx, r)
 		if err != nil {
-			return nil, err
+			return nil, nil
 		}
 		return h, nil
 	}
