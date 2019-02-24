@@ -36,6 +36,7 @@ func NewServer() pb.VaultServer {
 
 // decodeHashRequest is helper function dictated by Go kit to decode hash
 // request for Hash. The original signature from Go kit is http.DecodeRequestFunc.
+// See: https://github.com/go-kit/kit/blob/master/transport/grpc/encode_decode.go
 func decodeHashRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var hr *pb.HashRequest
 	err := json.NewDecoder(r.Body).Decode(hr)
