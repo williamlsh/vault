@@ -3,118 +3,139 @@ package vault
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	"vault/pb"
-
 	"github.com/go-kit/kit/endpoint"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
-// service implements VaultServer interface.
-type service struct{}
+// Service provides password hashing capacities.
+type Service interface {
+	Hash(ctx context.Context, password string) (string, error)
+	Validate(ctx context.Context, password, hash string) (bool, error)
+}
 
-func (service) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(hr.Password), bcrypt.DefaultCost)
+type vaultService struct{}
+
+// NewService makes a new service.
+func NewService() Service {
+	return vaultService{}
+}
+
+func (vaultService) Hash(ctx context.Context, password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &pb.HashResponse{Hash: string(hash)}, nil
+	return string(hash), nil
 }
 
-func (service) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
-	err := bcrypt.CompareHashAndPassword([]byte(vr.Hash), []byte(vr.Password))
+func (vaultService) Validate(ctx context.Context, password, hash string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(password, password, hash)
 	if err != nil {
-		return nil, err
+		return false, nil
 	}
-	return &pb.ValidateResponse{Valid: true}, nil
+	return string(hash), nil
 }
 
-// NewService returns a new VaultServer.
-func NewService() pb.VaultServer {
-	return service{}
+type hashRequest struct {
+	Password string `json:"password"`
 }
 
-// decodeHashRequest is helper function dictated by Go kit to decode hash
-// request for Hash. The original signature from Go kit is http.DecodeRequestFunc.
-// See: https://github.com/go-kit/kit/blob/master/transport/grpc/encode_decode.go
+type hashResponse struct {
+	Hash string `json:"hash"`
+	Err  error  `json:"err,omitempty"`
+}
+
+// decodeHashRequest is a helper function that will decode the JSON body of
+// http.Request to service.go.
+// The signature for decodeHashRequest is dictated by Go kit because it will later use it to decode HTTP requests on our behalf.
 func decodeHashRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var hr *pb.HashRequest
-	err := json.NewDecoder(r.Body).Decode(hr)
+	var req hashRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return nil, err
 	}
-	return hr, nil
+	return req, nil
 }
 
-// decodeValidateRequest is a helper function for Validate.
+type validateRequest struct {
+	Password string `json:"password"`
+	Hash     string `json:"hash"`
+}
+
+type validateResponse struct {
+	Valid bool  `json:"valid"`
+	Err   error `json:"err,omitempty"`
+}
+
 func decodeValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var vr *pb.ValidateRequest
-	err := json.NewDecoder(r.Body).Decode(vr)
+	var req validateRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return nil, err
 	}
-	return vr, nil
+	return req, nil
 }
 
-// encodeResponse is a helper function for Go kit.
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
 }
 
-// MakeHashEndpoint turns Hash to a Go kit Endpoint.
-// Never return error in transport layer.
-func MakeHashEndpoint(srv pb.VaultServer) endpoint.Endpoint {
+// MakeHashEndpoint turns Hash method  of vaultService into an endpoint.
+func MakeHashEndpoint(srv Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		r := request.(*pb.HashRequest)
-		h, err := srv.Hash(ctx, r)
+		req := request.(hashRequest)
+		v, err := srv.Hash(ctx, req.Password)
 		if err != nil {
-			return nil, nil
+			return hashResponse{v, err.Error()}, nil
 		}
-		return h, nil
+		return hashResponse{v, ""}, nil
 	}
 }
 
-// MakeValidateEndpoint turns Validate to Go kit Endpoint
-func MakeValidateEndpoint(srv pb.VaultServer) endpoint.Endpoint {
+// MakeValidateEndpoint turns Validate method  of vaultService into an endpoint.
+func MakeValidateEndpoint(srv Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		r := request.(*pb.ValidateRequest)
-		h, err := srv.Validate(ctx, r)
+		req := request.(validateRequest)
+		v, err := srv.Hash(ctx, req.Password, req.Hash)
 		if err != nil {
-			return nil, nil
+			return validateResponse{false, err.Error()}, nil
 		}
-		return h, nil
+		return validateResponse{v, ""}, nil
 	}
 }
 
-// Endpoints represents all endpoints for VaultServer service.
+// Endpoints represents all endpoints for the vaultService.
 type Endpoints struct {
-	HashEndpoint, ValidateEndpoint endpoint.Endpoint
+	HashEndpoint, ValidEndpoint endpoint.Endpoint
 }
 
 // Hash uses the HashEndpoint to hash a password.
-func (e Endpoints) Hash(ctx context.Context, hr *pb.HashRequest) (*pb.HashResponse, error) {
-	resp, err := e.HashEndpoint(ctx, hr)
+func (e Endpoints) Hash(ctx context.Context, password string) (string, error) {
+	req := hashRequest{Password: password}
+	resp, err := e.HashEndpoint(ctx, req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	hashResp := resp.(*pb.HashResponse)
-	if hashResp == nil {
-		return nil, errors.New("hash request failed")
+	hashResp := resp.(hashResponse)
+	if err := hashResp.Err(); err != "" {
+		return "", err
 	}
-	return hashResp, nil
+	return hashResp.Hash, nil
 }
 
-// Validate uses the ValidateEndpoint to validate a password and a hash pair.
-func (e Endpoints) Validate(ctx context.Context, hr *pb.ValidateRequest) (*pb.ValidateResponse, error) {
-	resp, err := e.ValidateEndpoint(ctx, hr)
+// Validate uses the ValidEndpoint to validate a password a hash pair.
+func (e Endpoints) Validate(ctx context.Context, password, hash string) (string, error) {
+	req := validateRequest{Password: password, Hash: hash}
+	resp, err := e.ValidEndpoint(ctx, req)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	validateResp := resp.(*pb.ValidateResponse)
-	if validateResp == nil {
-		return nil, errors.New("validate request failed")
+	validateResp := resp.(validateResponse)
+	if err := validateResp.Err(); err != "" {
+		return "", err
 	}
-	return validateResp, nil
+	return validateResp.Valid, nil
 }
