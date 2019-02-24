@@ -7,6 +7,7 @@ import (
 
 	"vault/pb"
 
+	"github.com/go-kit/kit/endpoint"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,7 +30,7 @@ func (service) Validate(ctx context.Context, vr *pb.ValidateRequest) (*pb.Valida
 	return &pb.ValidateResponse{Valid: true}, nil
 }
 
-// NewServer returns a new VaultServer.
+// NewService returns a new VaultServer.
 func NewService() pb.VaultServer {
 	return service{}
 }
@@ -59,4 +60,16 @@ func decodeValidateRequest(ctx context.Context, r *http.Request) (interface{}, e
 // encodeResponse is a helper function for Go kit.
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+// MakeHashEndpoint turns Hash to a Go kit Endpoint.
+func MakeHashEndpoint(srv pb.VaultServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		r := request.(*pb.HashRequest)
+		h, err := srv.Hash(ctx, r)
+		if err != nil {
+			return nil, err
+		}
+		return h, nil
+	}
 }
