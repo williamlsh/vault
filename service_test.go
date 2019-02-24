@@ -25,10 +25,10 @@ func TestHasherService(t *testing.T) {
 	}
 
 	resp, err = srv.Validate(ctx, &pb.ValidateRequest{Password: "wrong password", Hash: h.Hash})
-	if err != nil {
+	if err == nil {
 		t.Errorf("validate: %v", err)
 	}
-	if !resp.Valid {
+	if resp.Valid {
 		t.Error("expected false from Valid")
 	}
 }
