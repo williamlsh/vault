@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -41,6 +42,13 @@ func main() {
 		HashEndpoint:     hashEndpoint,
 		ValidateEndpoint: validateEndpoint,
 	}
+
+	// HTTP transport
+	go func() {
+		log.Println("http:", *httpAddr)
+		handler := vault.NewHTTPServer(ctx, endpoints)
+		errChan <- http.ListenAndServe(*httpAddr, handler)
+	}()
 
 	// gRPC transport
 	go func() {
