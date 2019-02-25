@@ -41,7 +41,7 @@ func main() {
 	}()
 
 	// Rate limit
-	limit := rate.NewLimiter(rate.Every(1*time.Minute), 1)
+	limit := rate.NewLimiter(rate.Every(1*time.Second), 1)
 
 	hashEndpoint := vault.MakeHashEndpoint(srv)
 	{
