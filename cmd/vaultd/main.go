@@ -20,7 +20,7 @@ import (
 func main() {
 	var (
 		httpAddr = flag.String("http", ":8080", "http listen address")
-		gRPCAddr = flag.String("grpc", ":8081", "gRPC isten address")
+		gRPCAddr = flag.String("grpc", ":8081", "gRPC listen address")
 	)
 	flag.Parse()
 
