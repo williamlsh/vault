@@ -6,4 +6,4 @@
 vaultcli hash 'my_password'
 
 # To validate a hash passsword pair.
-vaultcli validate 'my_hash' 'my_hash'
+vaultcli validate 'my_hash' 'my_password'
