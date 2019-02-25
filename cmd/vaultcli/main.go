@@ -35,7 +35,7 @@ func main() {
 		hash(ctx, vaultService, password)
 	case "validate":
 		var password, hash string
-		password, args := pop(args)
+		password, args = pop(args)
 		hash, args = pop(args)
 		validate(ctx, vaultService, password, hash)
 	default:
