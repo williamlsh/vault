@@ -1,6 +1,6 @@
 # Vault
 
-Vault provides hashing password and validating password and hash pair services. The development of Vault is under the book of [Go Programming Blueprints](https://www.goodreads.com/book/show/32902495-go-programming-blueprints---second-edition).
+Vault provides hashing password and validating password and hash pair services. The development of Vault was under instructions of [Go Programming Blueprints](https://www.goodreads.com/book/show/32902495-go-programming-blueprints---second-edition).
 
 ## Description
 
