@@ -9,7 +9,7 @@ import (
 	"time"
 	"vault"
 
-	grpcclient "vault/client/grpc"
+	grpcclient "github.com/williamzion/vault/client/grpc"
 
 	"google.golang.org/grpc"
 )

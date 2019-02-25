@@ -17,8 +17,8 @@ import (
 	ratelimitkit "github.com/go-kit/kit/ratelimit"
 	"google.golang.org/grpc"
 
-	"vault"
-	"vault/pb"
+	"github.com/williamzion/vault"
+	"github.com/williamzion/vault/pb"
 )
 
 func main() {

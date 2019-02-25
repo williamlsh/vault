@@ -2,7 +2,7 @@ package vault
 
 import (
 	"context"
-	"vault/pb"
+	"github.com/williamzion/vault/pb"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
