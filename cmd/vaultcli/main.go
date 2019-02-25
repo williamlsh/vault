@@ -35,8 +35,8 @@ func main() {
 		hash(ctx, vaultService, password)
 	case "validate":
 		var password, hash string
-		password, args = pop(args)
 		hash, args = pop(args)
+		password, args = pop(args)
 		validate(ctx, vaultService, password, hash)
 	default:
 		log.Fatalln("unknown command", cmd)
@@ -57,7 +57,7 @@ func validate(ctx context.Context, service vault.Service, password, hash string)
 		log.Fatalln(err.Error())
 	}
 	if !v {
-		fmt.Println("invalid")
+		fmt.Println("invalid:", v)
 		os.Exit(1)
 	}
 	fmt.Println("valid:", v)
