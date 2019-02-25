@@ -10,7 +10,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"golang.org/x/time/rate"
+
+	ratelimitkit "github.com/go-kit/kit/ratelimit"
 	"google.golang.org/grpc"
 
 	"vault"
@@ -36,8 +40,17 @@ func main() {
 		errChan <- fmt.Errorf("%s", <-c)
 	}()
 
+	// Rate limit
+	limit := rate.NewLimiter(rate.Every(1*time.Minute), 1)
+
 	hashEndpoint := vault.MakeHashEndpoint(srv)
+	{
+		hashEndpoint = ratelimitkit.NewDelayingLimiter(limit)(hashEndpoint)
+	}
 	validateEndpoint := vault.MakeValidateEndpoint(srv)
+	{
+		validateEndpoint = ratelimitkit.NewDelayingLimiter(limit)(validateEndpoint)
+	}
 	endpoints := vault.Endpoints{
 		HashEndpoint:     hashEndpoint,
 		ValidateEndpoint: validateEndpoint,
