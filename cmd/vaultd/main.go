@@ -45,7 +45,7 @@ func main() {
 
 	hashEndpoint := vault.MakeHashEndpoint(srv)
 	{
-		// This is a variable shadowing, see: https://devs.cloudimmunity.com/gotchas-and-common-mistakes-in-go-golang/index.html#vars_shadow for more details.
+		// This is not a variable shadowing, see: https://devs.cloudimmunity.com/gotchas-and-common-mistakes-in-go-golang/index.html#vars_shadow for more details.
 		// variable shadowing takes effect only within block scope, unavailable outside block.
 		hashEndpoint = ratelimitkit.NewDelayingLimiter(limit)(hashEndpoint)
 	}
