@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"text/tabwriter"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -22,13 +21,11 @@ import (
 const vaultLogLevel = "VAULT_LOG_LEVEL"
 
 func main() {
-	fs := flag.NewFlagSet("vault", flag.ExitOnError)
 	var (
-		httpAddr = fs.String("http-addr", ":8080", "HTTP listen address")
-		grpcAddr = fs.String("grpc-addr", ":8081", "gRPC listen address")
+		httpAddr = flag.String("http-addr", ":8080", "HTTP listen address")
+		grpcAddr = flag.String("grpc-addr", ":8081", "gRPC listen address")
 	)
-	fs.Usage = usageFor(fs, os.Args[0]+" [flags]")
-	fs.Parse(os.Args[1:])
+	flag.Parse()
 
 	// Logger domain.
 	var logger log.Logger
@@ -87,19 +84,4 @@ func main() {
 	}()
 
 	level.Error(logger).Log("exit", <-errs)
-}
-
-func usageFor(fs *flag.FlagSet, short string) func() {
-	return func() {
-		fmt.Fprintf(os.Stderr, "USAGE\n")
-		fmt.Fprintf(os.Stderr, " %s\n", short)
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "FLAGS\n")
-		w := tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
-		fs.VisitAll(func(f *flag.Flag) {
-			fmt.Fprintf(w, "\t-%s %s\t%s\n", f.Name, f.DefValue, f.Usage)
-		})
-		w.Flush()
-		fmt.Fprintf(os.Stderr, "\n")
-	}
 }
