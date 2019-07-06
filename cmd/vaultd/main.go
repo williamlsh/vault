@@ -1,83 +1,87 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"golang.org/x/time/rate"
-
-	ratelimitkit "github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	vaultpb "github.com/williamzion/vault/pb"
+	"github.com/williamzion/vault/pkg/vaultendpoint"
+	"github.com/williamzion/vault/pkg/vaultransport"
+	"github.com/williamzion/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
-
-	"github.com/williamzion/vault"
-	"github.com/williamzion/vault/pb"
 )
+
+const vaultdLogLevel = "VAULTD_LOG_LEVEL"
 
 func main() {
 	var (
-		httpAddr = flag.String("http", ":8080", "http listen address")
-		gRPCAddr = flag.String("grpc", ":8081", "gRPC listen address")
+		httpAddr = flag.String("http-addr", ":8080", "HTTP listen address")
+		grpcAddr = flag.String("grpc-addr", ":8081", "gRPC listen address")
 	)
 	flag.Parse()
 
-	ctx := context.Background()
-	srv := vault.NewService()
-	errChan := make(chan error)
+	// Logger domain.
+	var logger log.Logger
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		// Note: Enable error level log in production mode.
+		switch os.Getenv(vaultdLogLevel) {
+		case "debug", "all":
+			logger = level.NewFilter(logger, level.AllowAll())
+		case "info":
+			logger = level.NewFilter(logger, level.AllowInfo())
+		case "warn":
+			logger = level.NewFilter(logger, level.AllowWarn())
+		case "error":
+			logger = level.NewFilter(logger, level.AllowError())
+		case "none":
+			logger = level.NewFilter(logger, level.AllowNone())
+		default:
+			logger = level.NewFilter(logger, level.AllowError())
+		}
+		logger = log.With(logger, "ts", log.DefaultTimestamp)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
 
-	// Traps termination signal (such as ctrl + C) and sends an error down
-	// errChain.
+	// Service domian.
+	var (
+		service     = vaultservice.NewService()
+		endpoints   = vaultendpoint.New(service, logger)
+		httpHandler = vaultransport.NewHTTPHandler(endpoints, logger)
+		grpcServer  = vaultransport.NewGRPCServer(endpoints, logger)
+	)
+
+	errs := make(chan error, 2)
 	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errChan <- fmt.Errorf("%s", <-c)
+		c := make(chan os.Signal, 3)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	// Rate limit
-	limit := rate.NewLimiter(rate.Every(1*time.Second), 1)
-
-	hashEndpoint := vault.MakeHashEndpoint(srv)
-	{
-		// This is not a variable shadowing, see: https://devs.cloudimmunity.com/gotchas-and-common-mistakes-in-go-golang/index.html#vars_shadow for more details.
-		// variable shadowing takes effect only within block scope, unavailable outside block.
-		hashEndpoint = ratelimitkit.NewDelayingLimiter(limit)(hashEndpoint)
-	}
-	validateEndpoint := vault.MakeValidateEndpoint(srv)
-	{
-		validateEndpoint = ratelimitkit.NewDelayingLimiter(limit)(validateEndpoint)
-	}
-	endpoints := vault.Endpoints{
-		HashEndpoint:     hashEndpoint,
-		ValidateEndpoint: validateEndpoint,
-	}
-
-	// HTTP transport
 	go func() {
-		log.Println("http:", *httpAddr)
-		handler := vault.NewHTTPServer(ctx, endpoints)
-		errChan <- http.ListenAndServe(*httpAddr, handler)
+		logger.Log("transport", "HTTP", "addr", *httpAddr)
+		errs <- http.ListenAndServe(*httpAddr, httpHandler)
 	}()
 
-	// gRPC transport
 	go func() {
-		lis, err := net.Listen("tcp", *gRPCAddr)
+		lis, err := net.Listen("tcp", *grpcAddr)
 		if err != nil {
-			errChan <- err
+			logger.Log("transport", "gRPC", "during", "Listen", "err", err)
+			errs <- err
 			return
 		}
-		log.Println("grpc:", *gRPCAddr)
-		handler := vault.NewGRPCServer(ctx, endpoints)
-		gRPCServer := grpc.NewServer()
-		pb.RegisterVaultServer(gRPCServer, handler)
-		errChan <- gRPCServer.Serve(lis)
+		logger.Log("transport", "gRPC", "addr", *grpcAddr)
+		s := grpc.NewServer()
+		vaultpb.RegisterVaultServer(s, grpcServer)
+		errs <- s.Serve(lis)
 	}()
 
-	log.Fatalln(<-errChan)
+	level.Error(logger).Log("exit", <-errs)
 }

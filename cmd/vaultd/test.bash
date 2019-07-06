@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 curl -XPOST -d '{"password":"znm9832nmrfz4egwy43rn8"}' \
 http://localhost:8080/hash
 
