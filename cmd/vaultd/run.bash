@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export VAULT_LOG_LEVEL=all
+export VAULTD_LOG_LEVEL=all
 cd $(go list -f '{{.Dir}}' github.com/williamzion/vault/cmd/vaultd) && go run \
   -race . \
   -http-addr=":8080" \

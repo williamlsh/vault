@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const vaultLogLevel = "VAULT_LOG_LEVEL"
+const vaultdLogLevel = "VAULTD_LOG_LEVEL"
 
 func main() {
 	var (
@@ -32,7 +32,7 @@ func main() {
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
 		// Note: Enable error level log in production mode.
-		switch os.Getenv(vaultLogLevel) {
+		switch os.Getenv(vaultdLogLevel) {
 		case "debug", "all":
 			logger = level.NewFilter(logger, level.AllowAll())
 		case "info":
