@@ -108,9 +108,7 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 func err2code(err error) int {
-	switch err {
-	default:
-	}
+	// In practical use case, a error switch will be used.
 	return http.StatusInternalServerError
 }
 
