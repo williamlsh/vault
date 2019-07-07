@@ -3,7 +3,7 @@
 # Generate a 2048-bit RSA private key.
 openssl genrsa -out server-key.pem 2048
 
-# Generate a CSR for a private key.
+# Generate a CSR for a private key with servername `example.com`.
 openssl req -new -sha256 -key server-key.pem -out server-csr.pem
 
 # Create a self-signed certificate.
