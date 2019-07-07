@@ -3,6 +3,9 @@ package vaultservice
 import (
 	"context"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/williamzion/vault/pkg/store"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -12,25 +15,40 @@ type Service interface {
 	Validate(ctx context.Context, password, hash string) (bool, error)
 }
 
-type vaultService struct{}
+type vaultService struct {
+	logger log.Logger
+	store  store.Store
+}
 
 // NewService makes a new service.
-func NewService() Service {
-	return &vaultService{}
+func NewService(logger log.Logger, s store.Store) Service {
+	return &vaultService{
+		logger: logger,
+		store:  s,
+	}
 }
 
 func (s *vaultService) Hash(ctx context.Context, password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		level.Error(s.logger).Log("during", "hash", "err", err)
 		return "", err
 	}
+	errc := s.store.KeepSecret(hash)
+	if err := <-errc; err != nil {
+		level.Error(s.logger).Log("during", "keepSecret", "err", err)
+		return "", err
+	}
+	level.Info(s.logger).Log("hash", "success")
 	return string(hash), nil
 }
 
 func (s *vaultService) Validate(ctx context.Context, password, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
+		level.Error(s.logger).Log("during", "validate", "err", err)
 		return false, nil
 	}
+	level.Info(s.logger).Log("validate", "success")
 	return true, nil
 }
