@@ -11,6 +11,7 @@ import (
 	"github.com/williamzion/vault/pkg/vaultransport"
 	"github.com/williamzion/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -21,9 +22,12 @@ const (
 
 func main() {
 	var (
-		httpAddr = flag.String("http-addr", ":8080", "HTTP listen address")
-		grpcAddr = flag.String("grpc-addr", ":8081", "gRPC listen address")
+		httpAddr = flag.String("http-addr", "", "HTTP listen address")
+		grpcAddr = flag.String("grpc-addr", "", "gRPC listen address")
 		method   = flag.String("method", "", "hash, validate")
+		// TLS certificate file and server name.
+		certFile   = flag.String("cert-file", "", "TLS certificate file")
+		serverName = flag.String("server-name", "", "server name")
 	)
 	flag.Parse()
 
@@ -56,8 +60,19 @@ func main() {
 	)
 	if *httpAddr != "" {
 		svc, err = vaultransport.NewHTTPClient(*httpAddr, logger)
+		level.Info(logger).Log("transport", "http", "http-addr", *httpAddr)
 	} else if *grpcAddr != "" {
-		conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(grpcDialTimeout))
+		level.Info(logger).Log("transport", "grpc", "grpc-addr", *grpcAddr)
+		creds, err := credentials.NewClientTLSFromFile(*certFile, *serverName)
+		if err != nil {
+			level.Error(logger).Log("transport", "gRPC", "during", "construct TLS credentials", "err", err)
+			os.Exit(1)
+		}
+		opts := []grpc.DialOption{
+			grpc.WithTransportCredentials(creds),
+			grpc.WithTimeout(grpcDialTimeout),
+		}
+		conn, err := grpc.Dial(*grpcAddr, opts...)
 		if err != nil {
 			level.Error(logger).Log("transport", "gRPC", "during", "grpc dial", "err", err)
 			os.Exit(1)
@@ -94,6 +109,5 @@ func main() {
 		level.Info(logger).Log("method", "validate", "result", v)
 	default:
 		level.Error(logger).Log("err", "invalid method")
-		return
 	}
 }

@@ -6,9 +6,12 @@ package pb
 import (
 	context "context"
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	math "math"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -266,6 +269,17 @@ func (c *vaultClient) Validate(ctx context.Context, in *ValidateRequest, opts ..
 type VaultServer interface {
 	Hash(context.Context, *HashRequest) (*HashResponse, error)
 	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
+}
+
+// UnimplementedVaultServer can be embedded to have forward compatible implementations.
+type UnimplementedVaultServer struct {
+}
+
+func (*UnimplementedVaultServer) Hash(ctx context.Context, req *HashRequest) (*HashResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Hash not implemented")
+}
+func (*UnimplementedVaultServer) Validate(ctx context.Context, req *ValidateRequest) (*ValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
 }
 
 func RegisterVaultServer(s *grpc.Server, srv VaultServer) {

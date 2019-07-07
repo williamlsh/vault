@@ -17,6 +17,7 @@ import (
 	"github.com/williamzion/vault/pkg/vaultransport"
 	"github.com/williamzion/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const vaultdLogLevel = "VAULTD_LOG_LEVEL"
@@ -25,6 +26,9 @@ func main() {
 	var (
 		httpAddr = flag.String("http-addr", ":8080", "HTTP listen address")
 		grpcAddr = flag.String("grpc-addr", ":8081", "gRPC listen address")
+		// TLS files.
+		certFile = flag.String("cert-file", "", "TLS certificate file")
+		keyFile  = flag.String("key-file", "", "TLS key file")
 		// Postgres connection credentials.
 		pgUser    = flag.String("pg-user", "", "postgreSQL database username")
 		pgPass    = flag.String("pg-password", "", "postgreSQL database password for provided user")
@@ -95,7 +99,14 @@ func main() {
 			return
 		}
 		level.Info(logger).Log("transport", "gRPC", "addr", *grpcAddr)
-		s := grpc.NewServer()
+		// Create tls based credential.
+		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+		if err != nil {
+			level.Error(logger).Log("transport", "gRPC", "during", "construct TLS credentials", "err", err)
+			errs <- err
+			return
+		}
+		s := grpc.NewServer(grpc.Creds(creds))
 		vaultpb.RegisterVaultServer(s, grpcServer)
 		errs <- s.Serve(lis)
 	}()

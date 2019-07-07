@@ -54,7 +54,7 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 	{
 		hashEndpoint = grpctransport.NewClient(
 			conn,
-			"pb.Hash",
+			"pb.Vault",
 			"Hash",
 			encodeGRPCHashRequest,
 			decodeGRPCHashResponse,
@@ -70,7 +70,7 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 	{
 		validateEndpoint = grpctransport.NewClient(
 			conn,
-			"pb.Validate",
+			"pb.Vault",
 			"Validate",
 			encodeGRPCValidateRequest,
 			decodeGRPCValidateResponse,
@@ -150,7 +150,7 @@ func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (inter
 }
 
 func err2str(err error) string {
-	if err != nil {
+	if err == nil {
 		return ""
 	}
 	return err.Error()
