@@ -1,6 +1,6 @@
 # Vault
 
-Vault provides bcrypt based password hashing and validating services developed.
+Vault provides bcrypt based password hashing and validating services.
 
 ## Description
 
@@ -24,7 +24,7 @@ There are two kinds of clients, gRCP and HTTP clients corresponding to the two e
 
 The installation requires a Go development environment.
 
-To enable go module is optional:
+To enable go module(optional):
 
 ```bash
 export GO111MODULE=on
@@ -81,3 +81,7 @@ vaultcli \
 ## Credits
 
 - [William](https://github.com/williamzion)
+
+## License
+
+Under MIT license.
