@@ -1,94 +1,83 @@
 # Vault
 
-Vault provides bcrypt based hashing password and validating password and hash pair services. The development of Vault was under instructions of [Go Programming Blueprints](https://www.goodreads.com/book/show/32902495-go-programming-blueprints---second-edition).
+Vault provides bcrypt based password hashing and validating services developed.
 
 ## Description
 
-Vault is a simple microservice component for password hashing and validating service. It's mainly developed with [go-kit](https://gokit.io) and protocol buffer based [gRPC](https://grpc.io/).
+Vault is a simple microservice component exposed a gRPC endpoint as well as a supplemented HTTP endpoint. It's mainly developed with [go-kit](https://gokit.io) and protocol buffers based [gRPC](https://grpc.io/).
 
-Vault service is composed of three layers:
+### Data store
 
-- Vault service
-- Vault endpoints
-  - hash endpoint
-  - validate endpoint
-- Vault transports
-  - http transport
-  - gRPC transport
+The `vault/pkg/store` package implements inner layer business logic with Postgres database. It exposes a `Store` interface which is highly decoupled. Data store implementation may not be really practical in such vault service case which is no more than just one `KeepSecret` method but the use of interface here is quite common and useful and could even be a trick to newbies.
 
-Vault root is composed of three packages:
+### Transport security
 
-- vault: package defining three service layers.
-- client: gRPC client used for vaultcli as entry to gRPC endpoint.
-- cmd: executable commands.
-  - vaultd: daemon executable for vault service, only ready for HTTP endpoint with command line.
-  - vaultcli: client command line to consume vault service only with gRPC endpoint.
+Since gRPC is the primary transport here, I only implemented gRPC transport with TLS encryption and JWT authentication. HTTP with TLS could be easily implemented but local test is not convenient.
 
-Vault uses only one middleware:
+To be noted here: the auth implementation between original gRPC and go-kit gRPC transport is a little different. Original gRPC uses `UnaryInterceptor` but not the case of go-kit due to the later one already had it integrated in transport layer.
 
-- `ratelimit` supported by golang.org/x/time/rate
+### Client
+
+There are two kinds of clients, gRCP and HTTP clients corresponding to the two endpoints of vault service. The clients are not implemented customary but by use of go-kit client library in `vault/pkg/vaultransport`.
 
 ## Installation
 
-The application requires a working Go development environment.
+The installation requires a Go development environment.
+
+To enable go module is optional:
 
 ```bash
-go get github.com/williamzion/vault
+export GO111MODULE=on
+```
+
+To install `vaultd` service:
+
+```bash
+go get -u github.com/williamzion/vault/cmd/vaultd
+```
+
+To install `vaultcli` client:
+
+```bash
+go get -u github.com/williamzion/vault/cmd/vaultcli
 ```
 
 ## Usage
 
-Run vaultd daemon first:
+To run vaultd daemon:
 
 ```bash
-cd go list -f '{{.Dir}}' github.com/williamzion/vault/cmd/vaultd
+vaultd \
+  -http-addr=":8080" \
+  -grpc-addr=":8081" \
+  -key-file="[KEY_FILE]" \ # certificate
+  -cert-file="[CERT_FILE]" \ # private key
+  -pg-user="[PG_USER]" \
+  -pg-password="[PG_PASS]" \
+  -pg-dbname="[PG_DBNAME]" \
+  -pg-host="[PG_HOST]" \
+  -pg-sslmode="[PG_SSLMODE]" \
+  -pg-port="[PG_PORT]"
 ```
+
+To run gRPC client:
 
 ```bash
-go run main.go
+vaultcli \
+  -server-name="[SERVER_NAME]" \ # server name in csr file
+  -cert-file="[CERT_FILE]" \ # certificate
+  -grpc-addr=":8081" \
+  -method="[METHOD]" # hash or validate
 ```
 
-- Consume HTTP endpoint.
+To run HTTP client:
 
-  To hash password:
-
-  ```bash
-  curl -XPOST -d '{"password":"your_password"}' \
-  http://localhost:8080/hash
-  ```
-
-  To validate password and hash pair:
-
-  ```bash
-  curl -XPOST -d '{"password":"your_password","hash":"previous_hash"}' \
-  http://localhost:8080/validate
-  ```
-
-- Consume gRPC endpoint.
-
-  Install vaultcli first:
-
-  ```bash
-  d go list -f '{{.Dir}}' github.com/williamzion/vault/cmd/vaultcli
-  ```
-
-  ```bash
-  go install
-  ```
-
-  To hash password:
-
-  ```bash
-  vaultcli hash 'my_password'
-  ```
-
-  To validate password and hash pair:
-
-  ```bash
-  vaultcli validate 'previous_hash' 'my_password'
-  ```
+```bash
+vaultcli \
+  -http-addr=":8080" \
+  -method="[METHOD]" # hash or validate
+```
 
 ## Credits
 
-- All credits to [matryer](https://github.com/matryer)
 - [William](https://github.com/williamzion)
