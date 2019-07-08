@@ -3,10 +3,15 @@ package vaultendpoint
 import (
 	"context"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/williamzion/vault/pkg/vaultservice"
 )
+
+// SigningKey is a JWT signing key.
+var SigningKey = []byte("zmh298onj30")
 
 // Set collects all of the endpoints that compose a vault service.
 type Set struct {
@@ -17,13 +22,20 @@ type Set struct {
 // New returns a Set that wraps the provided server, and wires in all of the
 // expected endpoint middlewares via the various parameters
 func New(svc vaultservice.Service, logger log.Logger) Set {
+	parser := jwt.NewParser(
+		func(token *stdjwt.Token) (interface{}, error) { return SigningKey, nil }, stdjwt.SigningMethodHS256,
+		jwt.StandardClaimsFactory,
+	)
+
 	var hashEndpoint endpoint.Endpoint
 	{
 		hashEndpoint = MakeHashEndpoint(svc)
+		hashEndpoint = parser(hashEndpoint)
 	}
 	var validateEndpoint endpoint.Endpoint
 	{
 		validateEndpoint = MakeValidateEndpoint(svc)
+		validateEndpoint = parser(validateEndpoint)
 	}
 	return Set{
 		HashEndpoint:     hashEndpoint,
