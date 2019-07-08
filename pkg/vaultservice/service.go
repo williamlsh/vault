@@ -3,6 +3,7 @@ package vaultservice
 import (
 	"context"
 
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/williamzion/vault/pkg/store"
@@ -29,6 +30,8 @@ func NewService(logger log.Logger, s store.Store) Service {
 }
 
 func (s *vaultService) Hash(ctx context.Context, password string) (string, error) {
+	level.Info(s.logger).Log("during", "hash", "jwt_token", ctx.Value(jwt.JWTTokenContextKey).(string))
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		level.Error(s.logger).Log("during", "hash", "err", err)
@@ -44,6 +47,8 @@ func (s *vaultService) Hash(ctx context.Context, password string) (string, error
 }
 
 func (s *vaultService) Validate(ctx context.Context, password, hash string) (bool, error) {
+	level.Info(s.logger).Log("during", "validate", "jwt_token", ctx.Value(jwt.JWTTokenContextKey).(string))
+
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
 		level.Error(s.logger).Log("during", "validate", "err", err)

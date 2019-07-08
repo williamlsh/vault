@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -19,6 +21,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	kid = "kid-header"
+	// A token's lifetime since issued.
+	tokExp = 1 * time.Second
+)
+
 type grpcServer struct {
 	hash     grpctransport.Handler
 	validate grpctransport.Handler
@@ -27,6 +35,7 @@ type grpcServer struct {
 // NewGRPCServer makes a set of endpoints available as a gRPC VaultServer.
 func NewGRPCServer(endpoints vaultendpoint.Set, logger log.Logger) pb.VaultServer {
 	options := []grpctransport.ServerOption{
+		grpctransport.ServerBefore(jwt.GRPCToContext()),
 		grpctransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 	}
 
@@ -48,7 +57,23 @@ func NewGRPCServer(endpoints vaultendpoint.Set, logger log.Logger) pb.VaultServe
 
 // NewGRPCClient returns a VaultService backed by  a gRPC server at the other end of the conn. The caller is responsible for constructuring the conn, and eventually closing the underlying transport.
 func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Service {
+	options := []grpctransport.ClientOption{
+		grpctransport.ClientBefore(jwt.ContextToGRPC()),
+	}
+
+	// Client scop rate limiter.
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
+
+	// Client scop JWT signer.
+	signer := jwt.NewSigner(
+		kid,
+		vaultendpoint.SigningKey,
+		stdjwt.SigningMethodHS256,
+		stdjwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(tokExp).Unix(),
+		},
+	)
 
 	var hashEndpoint endpoint.Endpoint
 	{
@@ -59,7 +84,9 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 			encodeGRPCHashRequest,
 			decodeGRPCHashResponse,
 			pb.HashResponse{},
+			options...,
 		).Endpoint()
+		hashEndpoint = signer(hashEndpoint)
 		hashEndpoint = limiter(hashEndpoint)
 		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Hash",
@@ -75,7 +102,9 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 			encodeGRPCValidateRequest,
 			decodeGRPCValidateResponse,
 			pb.ValidateResponse{},
+			options...,
 		).Endpoint()
+		validateEndpoint = signer(validateEndpoint)
 		validateEndpoint = limiter(validateEndpoint)
 		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Validate",
