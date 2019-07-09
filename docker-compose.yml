@@ -9,6 +9,8 @@ services:
     ports:
       - '8080:8080'
       - '8081:8081'
+    networks:
+      - node
 
   database:
     image: 'postgres:11'
@@ -20,5 +22,7 @@ services:
     volumes:
       - server_db:/var/lib/postgresql/data
       - ./pkg/store/.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - node
 volumes:
   server_db:
