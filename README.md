@@ -50,8 +50,8 @@ To run vaultd daemon:
 vaultd \
   -http-addr=":8080" \
   -grpc-addr=":8081" \
-  -key-file="[KEY_FILE]" \ # certificate
-  -cert-file="[CERT_FILE]" \ # private key
+  -key-file="[KEY_FILE]" \ # private key
+  -cert-file="[CERT_FILE]" \ # certificate
   -pg-user="[PG_USER]" \
   -pg-password="[PG_PASS]" \
   -pg-dbname="[PG_DBNAME]" \

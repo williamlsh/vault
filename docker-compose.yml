@@ -1,0 +1,25 @@
+version: '3.7'
+services:
+  vaultd:
+    build: .
+    depends_on:
+      - database
+    links:
+      - database
+    ports:
+      - '8080:8080'
+      - '8081:8081'
+    entrypoint:
+
+  database:
+    image: 'postgres:11'
+    environment:
+      POSTGRES_PASSWORD: password
+    container_name: 'postgres'
+    ports:
+      - '5432:5432'
+    volumes:
+      - server_db:/var/lib/postgresql/data
+      - ./pkg/store/.sql:/docker-entrypoint-initdb.d/schema.sql
+volumes:
+  server_db:
