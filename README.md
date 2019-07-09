@@ -4,7 +4,7 @@ Vault provides bcrypt based password hashing and validating services.
 
 ## Description
 
-Vault is a simple microservice component exposed a gRPC endpoint as well as a supplemented HTTP endpoint. It's mainly developed with [go-kit](https://gokit.io) and protocol buffers based [gRPC](https://grpc.io/).
+Vault is a simple microservice component exposed a gRPC endpoint as well as a supplemental HTTP endpoint. It's mainly developed with [go-kit](https://gokit.io) and protocol buffers based [gRPC](https://grpc.io/).
 
 ### Data store
 
@@ -15,6 +15,10 @@ The `vault/pkg/store` package implements inner layer business logic with Postgre
 Since gRPC is the primary transport here, I only implemented gRPC transport with TLS encryption and JWT authentication. HTTP with TLS could be easily implemented but local test is not convenient.
 
 To be noted here: the auth implementation between original gRPC and go-kit gRPC transport is a little different. Original gRPC uses `UnaryInterceptor` but not the case of go-kit due to the later one already had it integrated in transport layer.
+
+## Middleware
+
+The service and endpoint layers both are implemented with middleware. Logging middleware for both and prometheus middleware for endpoint only but none for transport layer now.
 
 ### Client
 
@@ -50,8 +54,9 @@ To run vaultd daemon:
 vaultd \
   -http-addr=":8080" \
   -grpc-addr=":8081" \
-  -key-file="[KEY_FILE]" \ # certificate
-  -cert-file="[CERT_FILE]" \ # private key
+  -debug-addr=":8082" \ # prometheus metrics
+  -tls-key="[KEY_FILE]" \ # private key
+  -tls-cert="[CERT_FILE]" \ # certificate
   -pg-user="[PG_USER]" \
   -pg-password="[PG_PASS]" \
   -pg-dbname="[PG_DBNAME]" \
@@ -65,7 +70,7 @@ To run gRPC client:
 ```bash
 vaultcli \
   -server-name="[SERVER_NAME]" \ # server name in csr file
-  -cert-file="[CERT_FILE]" \ # certificate
+  -tls-cert="[CERT_FILE]" \ # certificate
   -grpc-addr=":8081" \
   -method="[METHOD]" # hash or validate
 ```
@@ -77,6 +82,10 @@ vaultcli \
   -http-addr=":8080" \
   -method="[METHOD]" # hash or validate
 ```
+
+To view Prometheus metrics at:
+
+`http://localhost:8082/metrics`
 
 ## Credits
 
