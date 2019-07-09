@@ -69,7 +69,7 @@ func main() {
 
 	// Service domian.
 	var (
-		service     = vaultservice.NewService(log.With(logger, "domain", "vaultservice"), datastore)
+		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), datastore)
 		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"))
 		httpHandler = vaultransport.NewHTTPHandler(endpoints, log.With(logger, "domain", "vaultransport-http"))
 		grpcServer  = vaultransport.NewGRPCServer(endpoints, log.With(logger, "domain", "vaultransport-grpc"))
