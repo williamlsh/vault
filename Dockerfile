@@ -5,7 +5,7 @@ ADD . go/src/github.com/williamzion/vault
 ENV VAULTD_LOG_LEVEL=all
 
 # Install daemon vault command.
-RUN go install github.com/williamzion/vault/vaultd
+RUN go install github.com/williamzion/vault/cmd/vaultd
 
 ENTRYPOINT /go/bin/vaultd
 
