@@ -26,8 +26,8 @@ func main() {
 		grpcAddr = flag.String("grpc-addr", "", "gRPC listen address")
 		method   = flag.String("method", "", "hash, validate")
 		// TLS certificate file and server name.
-		certFile   = flag.String("cert-file", "", "TLS certificate file")
-		serverName = flag.String("server-name", "", "server name")
+		tlsCert            = flag.String("tls-cert", "", "TLS certificate file")
+		serverNameOverride = flag.String("server-name", "", "Server name override")
 	)
 	flag.Parse()
 
@@ -63,7 +63,7 @@ func main() {
 		level.Info(logger).Log("transport", "http", "http-addr", *httpAddr)
 	} else if *grpcAddr != "" {
 		level.Info(logger).Log("transport", "grpc", "grpc-addr", *grpcAddr)
-		creds, err := credentials.NewClientTLSFromFile(*certFile, *serverName)
+		creds, err := credentials.NewClientTLSFromFile(*tlsCert, *serverNameOverride)
 		if err != nil {
 			level.Error(logger).Log("transport", "gRPC", "during", "construct TLS credentials", "err", err)
 			os.Exit(1)
