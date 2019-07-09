@@ -32,8 +32,8 @@ func main() {
 		grpcAddr  = flag.String("grpc-addr", ":8081", "gRPC listen address")
 		debugAddr = flag.String("debug-addr", ":8082", "Debug and metrics listen address")
 		// TLS files.
-		certFile = flag.String("cert-file", "", "TLS certificate file")
-		keyFile  = flag.String("key-file", "", "TLS key file")
+		tlsCert = flag.String("tls-cert", "", "TLS certificate file")
+		tlsKey  = flag.String("tls-key", "", "TLS key file")
 		// Postgres connection credentials.
 		pgUser    = flag.String("pg-user", "", "postgreSQL database username")
 		pgPass    = flag.String("pg-password", "", "postgreSQL database password for provided user")
@@ -123,7 +123,7 @@ func main() {
 		}
 		level.Info(logger).Log("transport", "gRPC", "addr", *grpcAddr)
 		// Create tls based credential.
-		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+		creds, err := credentials.NewServerTLSFromFile(*tlsCert, *tlsKey)
 		if err != nil {
 			level.Error(logger).Log("transport", "gRPC", "during", "construct TLS credentials", "err", err)
 			errs <- err
