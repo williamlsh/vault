@@ -16,7 +16,7 @@ Since gRPC is the primary transport here, I only implemented gRPC transport with
 
 To be noted here: the auth implementation between original gRPC and go-kit gRPC transport is a little different. Original gRPC uses `UnaryInterceptor` but not the case of go-kit due to the later one already had it integrated in transport layer.
 
-## Middleware
+### Middleware
 
 The service and endpoint layers both are implemented with middleware. Logging middleware for both and prometheus middleware for endpoint only but none for transport layer now.
 
