@@ -1,11 +1,13 @@
 FROM golang
 
-ADD . go/src/github.com/williamzion/vault
+WORKDIR /go/src/github.com/williamzion/vault
+
+COPY . .
 
 ENV VAULTD_LOG_LEVEL=all
 
 # Install daemon vault command.
-RUN go install go/src/github.com/williamzion/vault/cmd/vaultd
+RUN go install ./cmd/vaultd
 
 ENTRYPOINT /go/bin/vaultd
 
