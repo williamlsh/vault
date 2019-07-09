@@ -11,6 +11,10 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	vaultpb "github.com/williamzion/vault/pb"
 	"github.com/williamzion/vault/pkg/store"
 	"github.com/williamzion/vault/pkg/vaultendpoint"
@@ -24,8 +28,9 @@ const vaultdLogLevel = "VAULTD_LOG_LEVEL"
 
 func main() {
 	var (
-		httpAddr = flag.String("http-addr", ":8080", "HTTP listen address")
-		grpcAddr = flag.String("grpc-addr", ":8081", "gRPC listen address")
+		httpAddr  = flag.String("http-addr", ":8080", "HTTP listen address")
+		grpcAddr  = flag.String("grpc-addr", ":8081", "gRPC listen address")
+		debugAddr = flag.String("debug-addr", ":8082", "Debug and metrics listen address")
 		// TLS files.
 		certFile = flag.String("cert-file", "", "TLS certificate file")
 		keyFile  = flag.String("key-file", "", "TLS key file")
@@ -64,18 +69,36 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
+	// Metrics domain.
+	var duration metrics.Histogram
+	{
+		// Endpoint-level metrics.
+		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "vault",
+			Subsystem: "vaultsvc",
+			Name:      "request_duration_seconds",
+			Help:      "Request duration in seconds.",
+		}, []string{"method", "success"})
+	}
+
 	// Datastore domain
 	datastore := store.New(log.With(logger, "domain", "store"), dsn)
 
 	// Service domian.
 	var (
-		service     = vaultservice.NewService(log.With(logger, "domain", "vaultservice"), datastore)
-		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"))
+		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), datastore)
+		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"), duration)
 		httpHandler = vaultransport.NewHTTPHandler(endpoints, log.With(logger, "domain", "vaultransport-http"))
 		grpcServer  = vaultransport.NewGRPCServer(endpoints, log.With(logger, "domain", "vaultransport-grpc"))
 	)
 
 	errs := make(chan error, 2)
+
+	// Metrics server.
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(*debugAddr, nil)
+	}()
 
 	// Interuption handler.
 	go func() {
