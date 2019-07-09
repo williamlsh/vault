@@ -96,17 +96,17 @@ func main() {
 	case "hash":
 		h, err := svc.Hash(ctx, "znm9832nmrfz4egwy43rn8")
 		if err != nil {
-			level.Error(logger).Log("method", "hash", "err", err)
+			level.Error(logger).Log("method", "Hash", "err", err)
 			return
 		}
-		level.Info(logger).Log("method", "hash", "result", h)
+		level.Info(logger).Log("method", "Hash", "result", h)
 	case "validate":
 		v, err := svc.Validate(ctx, "znm9832nmrfz4egwy43rn8", "$2a$10$8e4JwCH9mCppJpTQ3Ax1PevFIt79her0oOg7AFy3eA4BNoeOMX1w.")
 		if err != nil {
-			level.Error(logger).Log("method", "validate", "err", err)
+			level.Error(logger).Log("method", "Validate", "err", err)
 			return
 		}
-		level.Info(logger).Log("method", "validate", "result", v)
+		level.Info(logger).Log("method", "Validate", "result", v)
 	default:
 		level.Error(logger).Log("err", "invalid method")
 	}
