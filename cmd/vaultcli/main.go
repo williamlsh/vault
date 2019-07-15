@@ -17,7 +17,7 @@ import (
 const (
 	vaultcliLogLevel = "VAULTCLI_LOG_LEVEL"
 	grpcDialTimeout  = 1 * time.Second
-	rpcTimeout       = 2 * time.Second
+	rpcTimeout       = 3 * time.Second
 )
 
 func main() {
