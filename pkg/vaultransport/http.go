@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -27,6 +29,7 @@ import (
 // available on predefined paths.
 func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler {
 	options := []httptransport.ServerOption{
+		httptransport.ServerBefore(jwt.HTTPToContext()),
 		httptransport.ServerErrorEncoder(errorEncoder),
 		httptransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 	}
@@ -60,7 +63,22 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 		return nil, err
 	}
 
+	options := []httptransport.ClientOption{
+		httptransport.ClientBefore(jwt.ContextToHTTP()),
+	}
+
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
+
+	// Client scop JWT signer.
+	signer := jwt.NewSigner(
+		kid,
+		vaultendpoint.SigningKey,
+		stdjwt.SigningMethodHS256,
+		stdjwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(tokExp).Unix(),
+		},
+	)
 
 	var hashEndpoint endpoint.Endpoint
 	{
@@ -69,7 +87,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			copyURL(u, "/hash"),
 			encodeHTTPGenericRequest,
 			decodeHTTPHashResponse,
+			options...,
 		).Endpoint()
+		hashEndpoint = signer(hashEndpoint)
 		hashEndpoint = limiter(hashEndpoint)
 		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Hash",
@@ -83,7 +103,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			copyURL(u, "/validate"),
 			encodeHTTPGenericRequest,
 			decodeHTTPValidateResponse,
+			options...,
 		).Endpoint()
+		validateEndpoint = signer(validateEndpoint)
 		validateEndpoint = limiter(validateEndpoint)
 		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Validate",
