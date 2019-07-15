@@ -110,7 +110,7 @@ func main() {
 	// HTTP server.
 	go func() {
 		level.Info(logger).Log("transport", "HTTP", "addr", *httpAddr)
-		errs <- http.ListenAndServe(*httpAddr, httpHandler)
+		errs <- http.ListenAndServeTLS(*httpAddr, *tlsCert, *tlsKey, httpHandler)
 	}()
 
 	// gRPC server.

@@ -55,8 +55,8 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 // so likely of the form "host:port". We bake-in certain middlewares,
 // implememting the client library pattern.
 func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 	u, err := url.Parse(instance)
 	if err != nil {
