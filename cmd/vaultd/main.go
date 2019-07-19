@@ -15,6 +15,7 @@ import (
 	"github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/streadway/amqp"
 	vaultpb "github.com/williamzion/vault/pb"
 	"github.com/williamzion/vault/pkg/store"
 	"github.com/williamzion/vault/pkg/vaultendpoint"
@@ -41,6 +42,8 @@ func main() {
 		pgHost    = flag.String("pg-host", "localhost", "postgreSQL database host")
 		pgSslmode = flag.String("pg-sslmode", "disable", "postgreSQL database connection sslmode option")
 		pgPort    = flag.String("pg-port", "5432", "postgreSQL connection binding port")
+		// RabbitMQ.
+		amqpAddr = flag.String("amqp-addr", ":5432", "amqp listen address.")
 	)
 	flag.Parse()
 
@@ -132,6 +135,21 @@ func main() {
 		s := grpc.NewServer(grpc.Creds(creds))
 		vaultpb.RegisterVaultServer(s, grpcServer)
 		errs <- s.Serve(lis)
+	}()
+
+	// AMQP handler.
+	go func() {
+		conn, err := amqp.Dial(*amqpAddr)
+		if err != nil {
+			panic(err)
+		}
+		go func() {
+			errs <- fmt.Errorf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
+		}()
+		channel, err := conn.Channel()
+		if err != nil {
+			panic(err)
+		}
 	}()
 
 	// Waiting for error to be received.
