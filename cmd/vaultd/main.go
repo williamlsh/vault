@@ -84,7 +84,7 @@ func main() {
 	// Datastore domain
 	datastore := store.New(log.With(logger, "domain", "store"), dsn)
 
-	// Service domian.
+	// Service domain.
 	var (
 		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), datastore)
 		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"), duration)
@@ -97,10 +97,10 @@ func main() {
 	// Metrics server.
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(*debugAddr, nil)
+		errs <- http.ListenAndServe(*debugAddr, nil)
 	}()
 
-	// Interuption handler.
+	// Interruption handler.
 	go func() {
 		c := make(chan os.Signal, 3)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
