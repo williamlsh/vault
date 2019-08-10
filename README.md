@@ -89,7 +89,7 @@ To view Prometheus metrics at:
 
 ## Credits
 
-- [William](https://github.com/williamzion)
+- [William](https://github.com/williamlsh)
 
 ## License
 
