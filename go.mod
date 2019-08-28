@@ -1,4 +1,4 @@
-module github.com/williamzion/vault
+module github.com/williamlsh/vault
 
 go 1.12
 

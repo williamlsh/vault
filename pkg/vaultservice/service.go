@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/log"
-	"github.com/williamzion/vault/pkg/store"
+	"github.com/williamlsh/vault/pkg/store"
 	"golang.org/x/crypto/bcrypt"
 )
 
