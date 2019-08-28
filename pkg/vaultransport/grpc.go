@@ -14,9 +14,9 @@ import (
 	"github.com/go-kit/kit/transport"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
-	"github.com/williamzion/vault/pb"
-	"github.com/williamzion/vault/pkg/vaultendpoint"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pb"
+	"github.com/williamlsh/vault/pkg/vaultendpoint"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 )

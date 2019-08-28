@@ -20,8 +20,8 @@ import (
 	"github.com/go-kit/kit/transport"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/sony/gobreaker"
-	"github.com/williamzion/vault/pkg/vaultendpoint"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultendpoint"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"golang.org/x/time/rate"
 )
 
