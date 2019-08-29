@@ -7,7 +7,8 @@ import (
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/go-kit/kit/metrics"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 )
 
 // SigningKey is a JWT signing key.
@@ -21,7 +22,7 @@ type Set struct {
 
 // New returns a Set that wraps the provided server, and wires in all of the
 // expected endpoint middlewares via the various parameters
-func New(svc vaultservice.Service, logger log.Logger) Set {
+func New(svc vaultservice.Service, logger log.Logger, duration metrics.Histogram) Set {
 	parser := jwt.NewParser(
 		func(token *stdjwt.Token) (interface{}, error) { return SigningKey, nil }, stdjwt.SigningMethodHS256,
 		jwt.StandardClaimsFactory,
@@ -31,11 +32,15 @@ func New(svc vaultservice.Service, logger log.Logger) Set {
 	{
 		hashEndpoint = MakeHashEndpoint(svc)
 		hashEndpoint = parser(hashEndpoint)
+		hashEndpoint = LoggingMiddleware(log.With(logger, "method", "Hash"))(hashEndpoint)
+		hashEndpoint = InstrumentingMiddleware(duration.With("method", "Hash"))(hashEndpoint)
 	}
 	var validateEndpoint endpoint.Endpoint
 	{
 		validateEndpoint = MakeValidateEndpoint(svc)
 		validateEndpoint = parser(validateEndpoint)
+		validateEndpoint = LoggingMiddleware(log.With(logger, "method", "Validate"))(validateEndpoint)
+		validateEndpoint = InstrumentingMiddleware(duration.With("method", "Validate"))(validateEndpoint)
 	}
 	return Set{
 		HashEndpoint:     hashEndpoint,

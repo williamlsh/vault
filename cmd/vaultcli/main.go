@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/williamzion/vault/pkg/vaultransport"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultransport"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -17,7 +17,7 @@ import (
 const (
 	vaultcliLogLevel = "VAULTCLI_LOG_LEVEL"
 	grpcDialTimeout  = 1 * time.Second
-	rpcTimeout       = 2 * time.Second
+	rpcTimeout       = 3 * time.Second
 )
 
 func main() {
@@ -26,8 +26,8 @@ func main() {
 		grpcAddr = flag.String("grpc-addr", "", "gRPC listen address")
 		method   = flag.String("method", "", "hash, validate")
 		// TLS certificate file and server name.
-		certFile   = flag.String("cert-file", "", "TLS certificate file")
-		serverName = flag.String("server-name", "", "server name")
+		tlsCert            = flag.String("tls-cert", "", "TLS certificate file")
+		serverNameOverride = flag.String("server-name", "", "Server name override")
 	)
 	flag.Parse()
 
@@ -63,7 +63,7 @@ func main() {
 		level.Info(logger).Log("transport", "http", "http-addr", *httpAddr)
 	} else if *grpcAddr != "" {
 		level.Info(logger).Log("transport", "grpc", "grpc-addr", *grpcAddr)
-		creds, err := credentials.NewClientTLSFromFile(*certFile, *serverName)
+		creds, err := credentials.NewClientTLSFromFile(*tlsCert, *serverNameOverride)
 		if err != nil {
 			level.Error(logger).Log("transport", "gRPC", "during", "construct TLS credentials", "err", err)
 			os.Exit(1)
@@ -96,17 +96,17 @@ func main() {
 	case "hash":
 		h, err := svc.Hash(ctx, "znm9832nmrfz4egwy43rn8")
 		if err != nil {
-			level.Error(logger).Log("method", "hash", "err", err)
+			level.Error(logger).Log("method", "Hash", "err", err)
 			return
 		}
-		level.Info(logger).Log("method", "hash", "result", h)
+		level.Info(logger).Log("method", "Hash", "result", h)
 	case "validate":
 		v, err := svc.Validate(ctx, "znm9832nmrfz4egwy43rn8", "$2a$10$8e4JwCH9mCppJpTQ3Ax1PevFIt79her0oOg7AFy3eA4BNoeOMX1w.")
 		if err != nil {
-			level.Error(logger).Log("method", "validate", "err", err)
+			level.Error(logger).Log("method", "Validate", "err", err)
 			return
 		}
-		level.Info(logger).Log("method", "validate", "result", v)
+		level.Info(logger).Log("method", "Validate", "result", v)
 	default:
 		level.Error(logger).Log("err", "invalid method")
 	}

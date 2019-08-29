@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -18,8 +20,8 @@ import (
 	"github.com/go-kit/kit/transport"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/sony/gobreaker"
-	"github.com/williamzion/vault/pkg/vaultendpoint"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultendpoint"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"golang.org/x/time/rate"
 )
 
@@ -27,6 +29,7 @@ import (
 // available on predefined paths.
 func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler {
 	options := []httptransport.ServerOption{
+		httptransport.ServerBefore(jwt.HTTPToContext()),
 		httptransport.ServerErrorEncoder(errorEncoder),
 		httptransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 	}
@@ -49,8 +52,8 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 
 // NewHTTPClient returns an VaultService backed by an HTTP server living at the
 // remote instance. We expect instance to come from a service discovery system,
-// so likely of the form "host:port". We bake-in certain middlewares,
-// implememting the client library pattern.
+// so likely of the form "host:port". We bake-in certain middleware,
+// implementing the client library pattern.
 func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, error) {
 	if !strings.HasPrefix(instance, "http") {
 		instance = "http://" + instance
@@ -60,7 +63,22 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 		return nil, err
 	}
 
+	options := []httptransport.ClientOption{
+		httptransport.ClientBefore(jwt.ContextToHTTP()),
+	}
+
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
+
+	// Client scope JWT signer.
+	signer := jwt.NewSigner(
+		kid,
+		vaultendpoint.SigningKey,
+		stdjwt.SigningMethodHS256,
+		stdjwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(tokExp).Unix(),
+		},
+	)
 
 	var hashEndpoint endpoint.Endpoint
 	{
@@ -69,7 +87,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			copyURL(u, "/hash"),
 			encodeHTTPGenericRequest,
 			decodeHTTPHashResponse,
+			options...,
 		).Endpoint()
+		hashEndpoint = signer(hashEndpoint)
 		hashEndpoint = limiter(hashEndpoint)
 		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Hash",
@@ -83,7 +103,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			copyURL(u, "/validate"),
 			encodeHTTPGenericRequest,
 			decodeHTTPValidateResponse,
+			options...,
 		).Endpoint()
+		validateEndpoint = signer(validateEndpoint)
 		validateEndpoint = limiter(validateEndpoint)
 		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Validate",
