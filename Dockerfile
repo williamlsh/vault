@@ -1,11 +1,11 @@
 FROM golang
 
-ADD . /go/src/github.com/williamlsh/vault
+WORKDIR $GOPATH/src/github.com/williamlsh/vault
 
-RUN go install github.com/williamlsh/vault/cmd/vaultd
+COPY . .
 
-ENV VAULTD_LOG_LEVEL=all
+RUN go get -d -v ./cmd/vaultd
 
-EXPOSE 8080-8082
+RUN go install -v ./cmd/vaultd
 
-ENTRYPOINT [ "/go/bin/vaultd" ]
+ENTRYPOINT [ "go/bin/vaultd" ]
