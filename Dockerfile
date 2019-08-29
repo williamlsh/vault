@@ -1,10 +1,11 @@
 FROM golang
 
-ADD . go/src/github.com/williamzion/vault
+WORKDIR $GOPATH/src/github.com/williamlsh/vault
 
-# Install daemon vault command.
-RUN go install github.com/williamzion/vault/vaultd
+COPY . .
 
-ENTRYPOINT [ "vaultd", "--http", "8080", "--grpc", "8081" ]
+RUN go get -d -v ./cmd/vaultd
 
-EXPOSE 8080 8081
+RUN go install -v ./cmd/vaultd
+
+ENTRYPOINT [ "go/bin/vaultd" ]
