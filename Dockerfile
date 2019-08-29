@@ -1,11 +1,25 @@
-FROM golang
+# Reference: https://blog.container-solutions.com/faster-builds-in-docker-with-go-1-11
 
-WORKDIR $GOPATH/src/github.com/williamlsh/vault
+FROM golang:latest-alpine AS build_base
+
+WORKDIR $GOPATH/github.com/williamlsh/vault
+
+ENV GO111MODULE=on
+
+COPY go.mod .
+
+COPY go.sum .
+
+RUN go mod download
+
+FROM build_base AS server_builder
 
 COPY . .
 
-RUN go get -d -v ./cmd/vaultd
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags vaultd -ldflags '-w -extldflags "-static"' ./cmd/vaultd
 
-RUN go install -v ./cmd/vaultd
+FROM alpine as vaultd
 
-ENTRYPOINT [ "go/bin/vaultd" ]
+COPY --from=server_builder /go/bin/vaultd /bin/vaultd
+
+ENTRYPOINT [ "/bin/vaultd" ]
