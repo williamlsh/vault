@@ -13,9 +13,6 @@ services:
     depends_on:
       - db
     command: -http-addr=":8080" -grpc-addr=":8081" -debug-addr=":8082" -tls-key="/testdata/server-key.pem" -tls-cert="/testdata/server-cert.pem" -pg-user="postgres" -pg-password="postgres" -pg-dbname="postgres" -pg-host="127.0.0.1" -pg-sslmode="disable" -pg-port="5432"
-    deploy:
-      restart_policy:
-        condition: on-failure
 
   db:
     image: postgres:latest
@@ -23,15 +20,11 @@ services:
       - db-data:/var/lib/postgresql/data
     restart: always
     ports:
-     - "127.0.0.1:5432:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
     networks:
       - vaultnet
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
 
   visualizer:
     image: dockersamples/visualizer:stable
@@ -40,10 +33,6 @@ services:
     stop_grace_period: 1m30s
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
 
 networks:
   vaultnet:
