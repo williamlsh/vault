@@ -29,3 +29,5 @@ RUN apk add --no-cache ca-certificates
 COPY --from=build /go/bin/vaultd /bin/vaultd
 
 ENTRYPOINT [ "/bin/vaultd" ]
+
+EXPOSE 8080-8082
