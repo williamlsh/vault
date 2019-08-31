@@ -1,7 +1,7 @@
 version: "3"
 services:
   vaultd:
-    image: williamofsino/vault:latest
+    build: .
     ports:
       - "8080:8080"
       - "8081:8081"
