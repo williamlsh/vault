@@ -1,0 +1,49 @@
+version: "3"
+services:
+  vaultd:
+    image: williamofsino/vault:latest
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      - VAULTD_LOG_LEVEL=all
+    networks:
+      - vaultnet
+    depends_on:
+      - db
+    command: -http-addr=":8080" -grpc-addr=":8081" -debug-addr=":8082" -tls-key="/testdata/server-key.pem" -tls-cert="/testdata/server-cert.pem" -pg-user="postgres" -pg-password="postgres" -pg-dbname="postgres" -pg-host="localhost" -pg-sslmode="disable" -pg-port="5432"
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+    environment: POSTGRES_PASSWORD=postgres
+    networks:
+      - vaultnet
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8080:80"
+    stop_grace_period: 1m30s
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  vaultnet:
+
+volumes:
+  db-data:
