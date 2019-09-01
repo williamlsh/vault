@@ -6,7 +6,6 @@ jobs:
   build:
     machine:
       image: ubuntu-1604:201903-01
-    working_directory: /go/src/github.com/williamlsh/vault
     steps:
       - checkout
 
@@ -20,4 +19,5 @@ jobs:
     filters:
       branches:
         only:
+          - master
           - feature/circleci
