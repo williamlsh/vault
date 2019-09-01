@@ -1,0 +1,23 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    machine:
+      image: ubuntu-1604:201903-01
+    working_directory: /go/src/github.com/williamlsh/vault
+    steps:
+      - checkout
+
+      - run: wget -q https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz
+      - run: sudo rm -rf /usr/local/go
+      - run: sudo tar -C /usr/local -xzf go1.12.9.linux-amd64.tar.gz
+      - run: docker-compose -f docker-compose.yml up -d --force-recreate
+      - run: go get -t github.com/williamlsh/vault/...
+      - run: go test -v -race -tags tests github.com/williamlsh/vault/...
+
+    filters:
+      branches:
+        only:
+          - feature/circleci
