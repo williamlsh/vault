@@ -37,13 +37,13 @@ export GO111MODULE=on
 To install `vaultd` service:
 
 ```bash
-go get -u github.com/williamzion/vault/cmd/vaultd
+go get -u github.com/williamlsh/vault/cmd/vaultd
 ```
 
 To install `vaultcli` client:
 
 ```bash
-go get -u github.com/williamzion/vault/cmd/vaultcli
+go get -u github.com/williamlsh/vault/cmd/vaultcli
 ```
 
 ## Usage
