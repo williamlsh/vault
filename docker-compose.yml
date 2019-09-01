@@ -12,6 +12,7 @@ services:
       - vaultnet
     depends_on:
       - db
+    command: ["-http-addr=:8080", "-grpc-addr=:8081", "-debug-addr=:8082", "-tls-key=/testdata/server-key.pem", "-tls-cert=/testdata/server-cert.pem", "-pg-user=postgres", "-pg-password=postgres", "-pg-dbname=postgres", "-pg-host=db", "-pg-sslmode=disable", "-pg-port=5432"]
 
   db:
     image: postgres:latest
