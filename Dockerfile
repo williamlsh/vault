@@ -20,7 +20,7 @@ RUN go mod download
 # This layer is rebuilt when a file changes in the project directory
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags vaultd -ldflags '-w -extldflags "-static"' ./cmd/vaultd
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a ./cmd/vaultd
 
 FROM alpine:latest
 
