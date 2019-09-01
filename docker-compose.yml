@@ -1,0 +1,48 @@
+version: "3.7"
+services:
+  vaultd:
+    build: .
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      - VAULTD_LOG_LEVEL=all
+    networks:
+      - vaultnet
+    depends_on:
+      - db
+    command:
+      [
+        "-http-addr=:8080",
+        "-grpc-addr=:8081",
+        "-debug-addr=:8082",
+        "-tls-key=/testdata/server-key.pem",
+        "-tls-cert=/testdata/server-cert.pem",
+        "-pg-user=postgres",
+        "-pg-password=postgres",
+        "-pg-dbname=postgres",
+        "-pg-host=db",
+        "-pg-sslmode=disable",
+        "-pg-port=5432",
+      ]
+    links:
+      - db
+
+  db:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - vaultnet
+
+networks:
+  vaultnet:
+
+volumes:
+  db-data:
