@@ -28,8 +28,6 @@ RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /go/bin/vaultd /bin/vaultd
 
-COPY --from=builder /go/src/github.com/williamlsh/vault/testdata/ /testdata/
-
 ENTRYPOINT [ "/bin/vaultd" ]
 
 CMD ["-http-addr=:8080", "-grpc-addr=:8081", "-debug-addr=:8082", "-tls-key=/testdata/server-key.pem", "-tls-cert=/testdata/server-cert.pem", "-pg-user=postgres", "-pg-password=postgres", "-pg-dbname=postgres", "-pg-host=localhost", "-pg-sslmode=disable", "-pg-port=5432"]
