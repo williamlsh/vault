@@ -103,7 +103,7 @@ To view Prometheus metrics at:
 
 ### Docker Deployment
 
-Vault can be easily deployed with Docker and Docker compose. There is already a latest docker image prebuilt on Docker hub registry: [williamofsino/vault](#https://hub.docker.com/r/williamofsino/vault).
+Vault can be easily deployed with Docker and Docker compose. There is already a latest docker image prebuilt on Docker hub registry: [williamofsino/vault](https://hub.docker.com/r/williamofsino/vault).
 
 To run a single vault instance with Docker:
 
