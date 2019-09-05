@@ -125,7 +125,11 @@ docker-compose down --volumes
 
 ### CI Integration
 
-Vault has Circle CI integrated, for testing and builds.
+Vault integrated with the following CI/CDs:
+
+- Circle CI: for testing and building.
+- Github Actions: for testing across all platforms.
+- Docker hub: for building and pushing latest image.
 
 ### Credits
 
