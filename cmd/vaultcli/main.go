@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/williamzion/vault/pkg/vaultransport"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultransport"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

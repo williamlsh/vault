@@ -20,8 +20,8 @@ import (
 	"github.com/go-kit/kit/transport"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/sony/gobreaker"
-	"github.com/williamzion/vault/pkg/vaultendpoint"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultendpoint"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"golang.org/x/time/rate"
 )
 
@@ -52,8 +52,8 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 
 // NewHTTPClient returns an VaultService backed by an HTTP server living at the
 // remote instance. We expect instance to come from a service discovery system,
-// so likely of the form "host:port". We bake-in certain middlewares,
-// implememting the client library pattern.
+// so likely of the form "host:port". We bake-in certain middleware,
+// implementing the client library pattern.
 func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
@@ -69,7 +69,7 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
 
-	// Client scop JWT signer.
+	// Client scope JWT signer.
 	signer := jwt.NewSigner(
 		kid,
 		vaultendpoint.SigningKey,

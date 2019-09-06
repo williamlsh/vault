@@ -15,11 +15,11 @@ import (
 	"github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	vaultpb "github.com/williamzion/vault/pb"
-	"github.com/williamzion/vault/pkg/store"
-	"github.com/williamzion/vault/pkg/vaultendpoint"
-	"github.com/williamzion/vault/pkg/vaultransport"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	vaultpb "github.com/williamlsh/vault/pb"
+	"github.com/williamlsh/vault/pkg/store"
+	"github.com/williamlsh/vault/pkg/vaultendpoint"
+	"github.com/williamlsh/vault/pkg/vaultransport"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -84,7 +84,7 @@ func main() {
 	// Datastore domain
 	datastore := store.New(log.With(logger, "domain", "store"), dsn)
 
-	// Service domian.
+	// Service domain.
 	var (
 		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), datastore)
 		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"), duration)
@@ -97,10 +97,10 @@ func main() {
 	// Metrics server.
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(*debugAddr, nil)
+		errs <- http.ListenAndServe(*debugAddr, nil)
 	}()
 
-	// Interuption handler.
+	// Interruption handler.
 	go func() {
 		c := make(chan os.Signal, 3)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

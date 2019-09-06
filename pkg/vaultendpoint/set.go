@@ -8,7 +8,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	"github.com/williamzion/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/pkg/vaultservice"
 )
 
 // SigningKey is a JWT signing key.
