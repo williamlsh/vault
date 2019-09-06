@@ -3,6 +3,7 @@ package vaultransport
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -55,16 +56,26 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 // so likely of the form "host:port". We bake-in certain middleware,
 // implementing the client library pattern.
 func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 	u, err := url.Parse(instance)
 	if err != nil {
 		return nil, err
 	}
 
+	// Use customized http client, especially useful for localhost TLS test.
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
 	options := []httptransport.ClientOption{
 		httptransport.ClientBefore(jwt.ContextToHTTP()),
+		httptransport.SetClient(client),
 	}
 
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
