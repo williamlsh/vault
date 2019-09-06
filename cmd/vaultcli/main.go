@@ -22,8 +22,8 @@ const (
 
 func main() {
 	var (
-		httpAddr = flag.String("http-addr", "", "HTTP listen address")
-		grpcAddr = flag.String("grpc-addr", "", "gRPC listen address")
+		httpAddr = flag.String("http-addr", ":443", "HTTP listen address")
+		grpcAddr = flag.String("grpc-addr", ":8080", "gRPC listen address")
 		method   = flag.String("method", "", "hash, validate")
 		// TLS certificate file and server name.
 		tlsCert            = flag.String("tls-cert", "", "TLS certificate file")
