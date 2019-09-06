@@ -3,6 +3,7 @@ package vaultransport
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -63,8 +64,18 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 		return nil, err
 	}
 
+	// Use customized http client, especially useful for localhost TLS test.
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
 	options := []httptransport.ClientOption{
 		httptransport.ClientBefore(jwt.ContextToHTTP()),
+		httptransport.SetClient(client),
 	}
 
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
