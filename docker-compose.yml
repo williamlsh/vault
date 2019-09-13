@@ -50,8 +50,6 @@ services:
       - "9090:9090"
     networks:
       - vaultnet
-    depends-on:
-      - vaultd
     restart: always
 
 networks:
