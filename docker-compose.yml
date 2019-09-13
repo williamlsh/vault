@@ -5,9 +5,9 @@ services:
     volumes:
       - ./testdata/:/testdata/
     ports:
+      - "443:443"
       - "8080:8080"
       - "8081:8081"
-      - "8082:8082"
     environment:
       - VAULTD_LOG_LEVEL=all
     networks:
@@ -16,9 +16,9 @@ services:
       - db
     command:
       [
-        "-http-addr=:8080",
-        "-grpc-addr=:8081",
-        "-debug-addr=:8082",
+        "-http-addr=:443",
+        "-grpc-addr=:8080",
+        "-debug-addr=:8081",
         "-tls-key=/testdata/server-key.pem",
         "-tls-cert=/testdata/server-cert.pem",
         "-pg-user=postgres",
