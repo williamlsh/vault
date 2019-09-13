@@ -28,8 +28,6 @@ services:
         "-pg-sslmode=disable",
         "-pg-port=5432",
       ]
-    links:
-      - db
 
   db:
     image: postgres:latest
@@ -43,6 +41,18 @@ services:
       - POSTGRES_PASSWORD=postgres
     networks:
       - vaultnet
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - vaultnet
+    depends-on:
+      - vaultd
+    restart: always
 
 networks:
   vaultnet:
