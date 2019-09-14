@@ -15,21 +15,17 @@ services:
     depends_on:
       - db
     command:
-      [
-        "-http-addr=:443",
-        "-grpc-addr=:8080",
-        "-debug-addr=:8081",
-        "-tls-key=/testdata/server-key.pem",
-        "-tls-cert=/testdata/server-cert.pem",
-        "-pg-user=postgres",
-        "-pg-password=postgres",
-        "-pg-dbname=postgres",
-        "-pg-host=db",
-        "-pg-sslmode=disable",
-        "-pg-port=5432",
-      ]
-    links:
-      - db
+      - "-http-addr=:443"
+      - "-grpc-addr=:8080"
+      - "-debug-addr=:8081"
+      - "-tls-key=/testdata/server-key.pem"
+      - "-tls-cert=/testdata/server-cert.pem"
+      - "-pg-user=postgres"
+      - "-pg-password=postgres"
+      - "-pg-dbname=postgres"
+      - "-pg-host=db"
+      - "-pg-sslmode=disable"
+      - "-pg-port=5432"
 
   db:
     image: postgres:latest
@@ -44,8 +40,42 @@ services:
     networks:
       - vaultnet
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vaultnet
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_DEFAULT_INSTANCE_NAME=vaultd-prometheus-grafana
+      - GF_SECURITY_ADMIN_USER=william
+      - GF_SECURITY_ADMIN_PASSWORD=abc
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/testdata/server-cert.pem
+      - GF_SERVER_CERT_KEY=/testdata/server-key.pem
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./testdata/:/testdata/
+    networks:
+      - vaultnet
+    restart: always
+    depends_on:
+      - prometheus
+
 networks:
   vaultnet:
 
 volumes:
-  db-data:
+  db-data: {}
+  prometheus_data: {}
+  grafana_data: {}
