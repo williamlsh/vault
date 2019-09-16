@@ -28,9 +28,9 @@ const vaultdLogLevel = "VAULTD_LOG_LEVEL"
 
 func main() {
 	var (
-		httpAddr  = flag.String("http-addr", ":8080", "HTTP listen address")
-		grpcAddr  = flag.String("grpc-addr", ":8081", "gRPC listen address")
-		debugAddr = flag.String("debug-addr", ":8082", "Debug and metrics listen address")
+		httpAddr = flag.String("http-addr", ":443", "HTTP listen address")
+		grpcAddr = flag.String("grpc-addr", ":8080", "gRPC listen address")
+		promAddr = flag.String("prom-addr", ":8081", "Prometheus server listen address")
 		// TLS files.
 		tlsCert = flag.String("tls-cert", "", "TLS certificate file")
 		tlsKey  = flag.String("tls-key", "", "TLS key file")
@@ -97,7 +97,7 @@ func main() {
 	// Metrics server.
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		errs <- http.ListenAndServe(*debugAddr, nil)
+		errs <- http.ListenAndServeTLS(*promAddr, *tlsCert, *tlsKey, promhttp.Handler())
 	}()
 
 	// Interruption handler.
@@ -107,10 +107,10 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	// HTTP server.
+	// HTTP server with TLS.
 	go func() {
 		level.Info(logger).Log("transport", "HTTP", "addr", *httpAddr)
-		errs <- http.ListenAndServe(*httpAddr, httpHandler)
+		errs <- http.ListenAndServeTLS(*httpAddr, *tlsCert, *tlsKey, httpHandler)
 	}()
 
 	// gRPC server.
