@@ -68,7 +68,7 @@ To run vaultd daemon:
 vaultd \
   -http-addr=":443" \
   -grpc-addr=":8080" \
-  -debug-addr=":8081" \ # prometheus metrics
+  -prom-addr=":8081" \ # prometheus metrics
   -tls-key="[KEY_FILE]" \ # private key
   -tls-cert="[CERT_FILE]" \ # certificate
   -pg-user="[PG_USER]" \
@@ -99,7 +99,7 @@ vaultcli \
 
 To view Prometheus metrics at:
 
-`http://localhost:8081/metrics`
+`https://localhost:8081/metrics`
 
 ### Docker Deployment
 
