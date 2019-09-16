@@ -7,7 +7,7 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultd) && go run \
   -race . \
   -http-addr=":443" \
   -grpc-addr=":8080" \
-  -debug-addr=":8081" \
+  -prom-addr=":8081" \
   -tls-key="../../testdata/server-key.pem" \
   -tls-cert="../../testdata/server-cert.pem" \
   -pg-user="postgres" \
