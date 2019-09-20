@@ -23,7 +23,7 @@ type testcase struct {
 }
 
 func TestHTTP(t *testing.T) {
-	svc := vaultservice.New(log.NewNopLogger(), mock.NewNopStore())
+	svc := vaultservice.New(log.NewNopLogger(), discard.NewCounter(), mock.NewNopStore())
 	eps := vaultendpoint.New(svc, log.NewNopLogger(), discard.NewHistogram())
 	mux := vaultransport.NewHTTPHandler(eps, log.NewNopLogger())
 	srv := httptest.NewServer(mux)
