@@ -80,13 +80,23 @@ func main() {
 			Help:      "Request duration in seconds.",
 		}, []string{"method", "success"})
 	}
+	var ints metrics.Counter
+	{
+		// Business-level metrics.
+		ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "vault",
+			Subsystem: "vaultsvc",
+			Name:      "http_requests_summed",
+			Help:      "Total count of http requests summed of all endpoints.",
+		}, []string{})
+	}
 
 	// Datastore domain
 	datastore := store.New(log.With(logger, "domain", "store"), dsn)
 
 	// Service domain.
 	var (
-		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), datastore)
+		service     = vaultservice.New(log.With(logger, "domain", "vaultservice"), ints, datastore)
 		endpoints   = vaultendpoint.New(service, log.With(logger, "domain", "vaultendpoint"), duration)
 		httpHandler = vaultransport.NewHTTPHandler(endpoints, log.With(logger, "domain", "vaultransport-http"))
 		grpcServer  = vaultransport.NewGRPCServer(endpoints, log.With(logger, "domain", "vaultransport-grpc"))
