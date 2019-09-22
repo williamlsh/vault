@@ -2,13 +2,22 @@ package vaultendpoint
 
 import (
 	"context"
+	"time"
 
 	stdjwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/auth/jwt"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/kit/tracing/opentracing"
+	"github.com/go-kit/kit/tracing/zipkin"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	stdzipkin "github.com/openzipkin/zipkin-go"
+	"github.com/sony/gobreaker"
 	"github.com/williamlsh/vault/pkg/vaultservice"
+	"golang.org/x/time/rate"
 )
 
 // SigningKey is a JWT signing key.
@@ -22,8 +31,8 @@ type Set struct {
 
 // New returns a Set that wraps the provided server, and wires in all of the
 // expected endpoint middlewares via the various parameters
-func New(svc vaultservice.Service, logger log.Logger, duration metrics.Histogram) Set {
-	parser := jwt.NewParser(
+func New(svc vaultservice.Service, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) Set {
+	jwtParser := jwt.NewParser(
 		func(token *stdjwt.Token) (interface{}, error) { return SigningKey, nil }, stdjwt.SigningMethodHS256,
 		jwt.StandardClaimsFactory,
 	)
@@ -31,14 +40,22 @@ func New(svc vaultservice.Service, logger log.Logger, duration metrics.Histogram
 	var hashEndpoint endpoint.Endpoint
 	{
 		hashEndpoint = MakeHashEndpoint(svc)
-		hashEndpoint = parser(hashEndpoint)
+		hashEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(hashEndpoint)
+		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(hashEndpoint)
+		hashEndpoint = opentracing.TraceServer(otTracer, "Hash")(hashEndpoint)
+		hashEndpoint = jwtParser(hashEndpoint)
+		hashEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Hash")(hashEndpoint)
 		hashEndpoint = LoggingMiddleware(log.With(logger, "method", "Hash"))(hashEndpoint)
 		hashEndpoint = InstrumentingMiddleware(duration.With("method", "Hash"))(hashEndpoint)
 	}
 	var validateEndpoint endpoint.Endpoint
 	{
 		validateEndpoint = MakeValidateEndpoint(svc)
-		validateEndpoint = parser(validateEndpoint)
+		validateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(validateEndpoint)
+		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(validateEndpoint)
+		validateEndpoint = opentracing.TraceServer(otTracer, "Validate")(validateEndpoint)
+		validateEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Validate")(validateEndpoint)
+		validateEndpoint = jwtParser(validateEndpoint)
 		validateEndpoint = LoggingMiddleware(log.With(logger, "method", "Validate"))(validateEndpoint)
 		validateEndpoint = InstrumentingMiddleware(duration.With("method", "Validate"))(validateEndpoint)
 	}

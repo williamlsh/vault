@@ -11,8 +11,12 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/kit/tracing/opentracing"
+	"github.com/go-kit/kit/tracing/zipkin"
 	"github.com/go-kit/kit/transport"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"github.com/williamlsh/vault/pb"
 	"github.com/williamlsh/vault/pkg/vaultendpoint"
@@ -33,10 +37,11 @@ type grpcServer struct {
 }
 
 // NewGRPCServer makes a set of endpoints available as a gRPC VaultServer.
-func NewGRPCServer(endpoints vaultendpoint.Set, logger log.Logger) pb.VaultServer {
+func NewGRPCServer(endpoints vaultendpoint.Set, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) pb.VaultServer {
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerBefore(jwt.GRPCToContext()),
 		grpctransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
+		zipkin.GRPCServerTrace(zipkinTracer),
 	}
 
 	return &grpcServer{
@@ -44,21 +49,23 @@ func NewGRPCServer(endpoints vaultendpoint.Set, logger log.Logger) pb.VaultServe
 			endpoints.HashEndpoint,
 			decodeGRPCHashRequest,
 			encodeGRPCHashResponse,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Hash", logger)))...,
 		),
 		validate: grpctransport.NewServer(
 			endpoints.ValidateEndpoint,
 			decodeGRPCValidateRequest,
 			encodeGRPCValidateResponse,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.GRPCToContext(otTracer, "Validate", logger)))...,
 		),
 	}
 }
 
 // NewGRPCClient returns a VaultService backed by  a gRPC server at the other end of the conn. The caller is responsible for constructuring the conn, and eventually closing the underlying transport.
-func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Service {
+func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) vaultservice.Service {
 	options := []grpctransport.ClientOption{
+		grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)),
 		grpctransport.ClientBefore(jwt.ContextToGRPC()),
+		zipkin.GRPCClientTrace(zipkinTracer),
 	}
 
 	// Client scop rate limiter.
@@ -86,6 +93,8 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 			pb.HashResponse{},
 			options...,
 		).Endpoint()
+		hashEndpoint = opentracing.TraceClient(otTracer, "Hash")(hashEndpoint)
+		hashEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Hash")(hashEndpoint)
 		hashEndpoint = signer(hashEndpoint)
 		hashEndpoint = limiter(hashEndpoint)
 		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
@@ -104,6 +113,8 @@ func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) vaultservice.Servic
 			pb.ValidateResponse{},
 			options...,
 		).Endpoint()
+		validateEndpoint = opentracing.TraceClient(otTracer, "Validate")(validateEndpoint)
+		validateEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Validate")(validateEndpoint)
 		validateEndpoint = signer(validateEndpoint)
 		validateEndpoint = limiter(validateEndpoint)
 		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
