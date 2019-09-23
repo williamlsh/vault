@@ -19,9 +19,3 @@ scrape_configs:
       - targets: ["vaultd:8081"]
         labels:
           group: "production"
-
-  - job_name: "zipkin"
-    static_configs:
-      - targets: ["zipkin:9411"]
-        labels:
-          group: "production"
