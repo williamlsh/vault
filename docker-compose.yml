@@ -70,7 +70,6 @@ services:
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_FILE=/testdata/server-cert.pem
       - GF_SERVER_CERT_KEY=/testdata/server-key.pem
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
       - grafana_data:/var/lib/grafana
       - ./testdata/:/testdata/
