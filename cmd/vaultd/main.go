@@ -93,14 +93,14 @@ func main() {
 		endpoint, err := zipkin.NewEndpoint("vault", *zipkinEndpointPort)
 		if err != nil {
 			level.Error(logger).Log("msg", "unable to create local endpoint", "err", err)
+			os.Exit(1)
 		}
-		os.Exit(1)
 
 		zipkinTracer, err = zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint), zipkin.WithNoopTracer(useNoopTracer))
 		if err != nil {
 			level.Error(logger).Log("msg", "unable to create tracer", "err", err)
+			os.Exit(1)
 		}
-		os.Exit(1)
 	}
 
 	var tracer opentracing.Tracer
