@@ -8,7 +8,7 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -race . \
   -server-name="localhost" \
   -tls-cert="../../testdata/server-cert.pem" \
-  -grpc-addr=":8080" \
+  -grpc-addr="34.82.235.95:8080" \
   -method="hash" \
   -zipkin-reporter-url="" \
   -zipkin-endpoint-port="" \
@@ -18,7 +18,7 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
 # Run HTTP client.
 cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -race . \
-  -http-addr="https://localhost:443" \
+  -http-addr="https://34.82.235.95:443" \
   -method="hash" \
   -zipkin-reporter-url="" \
   -zipkin-endpoint-port="" \

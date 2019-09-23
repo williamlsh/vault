@@ -15,6 +15,9 @@ scrape_configs:
 
   - job_name: "vaultd"
     # Override the global default and scrape targets from this job every 1 seconds.
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
     static_configs:
       - targets: ["vaultd:8081"]
         labels:
