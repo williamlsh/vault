@@ -36,8 +36,7 @@ func main() {
 		tlsCert            = flag.String("tls-cert", "", "TLS certificate file")
 		serverNameOverride = flag.String("server-name", "", "Server name override")
 		// Zipkin tracer.
-		zipkinReporterURL  = flag.String("zipkin-reporter-url", "", "Enable Zipkin tracing (zipkin-go-opentracing) using a reporter URL e.g. http://localhost:9411/api/v2/spans")
-		zipkinEndpointPort = flag.String("zipkin-endpoint-port", "", "Zipkin endpoint port")
+		zipkinURL = flag.String("zipkin-reporter-url", "", "Enable Zipkin tracing (zipkin-go-opentracing) using a reporter URL e.g. http://localhost:9411/api/v2/spans")
 		// Lightstep tracer.
 		lightstepToken = flag.String("lightstep-token", "", "Enable LightStep tracing via a LightStep access token")
 		// Appdash.
@@ -71,11 +70,15 @@ func main() {
 	// Tracer domian.
 	var zipkinTracer *zipkin.Tracer
 	{
-		var useNoopTracer = *zipkinReporterURL == ""
-		reporter := zipkinhttp.NewReporter(*zipkinReporterURL)
+		var (
+			serviceName   = "vault-cli"
+			hostPort      = "" // if host:port is unknown we can keep this empty
+			useNoopTracer = *zipkinURL == ""
+			reporter      = zipkinhttp.NewReporter(*zipkinURL)
+		)
 		defer reporter.Close()
 
-		endpoint, err := zipkin.NewEndpoint("vault", *zipkinEndpointPort)
+		endpoint, err := zipkin.NewEndpoint(serviceName, hostPort)
 		if err != nil {
 			level.Error(logger).Log("msg", "unable to create local endpoint", "err", err)
 			os.Exit(1)
@@ -86,13 +89,16 @@ func main() {
 			level.Error(logger).Log("msg", "unable to create tracer", "err", err)
 			os.Exit(1)
 		}
+		if !useNoopTracer {
+			level.Info(logger).Log("tracer", "Zipkin", "type", "Native", "URL", *zipkinURL)
+		}
 	}
 
 	var tracer opentracing.Tracer
 	{
 		switch {
-		case *zipkinReporterURL != "":
-			level.Info(logger).Log("tracer", "Zipkin", "type", "OpenTracing", "URL", *zipkinReporterURL)
+		case *zipkinURL != "":
+			level.Info(logger).Log("tracer", "Zipkin", "type", "OpenTracing", "URL", *zipkinURL)
 			tracer = zipkinot.Wrap(zipkinTracer)
 			fallthrough
 		case *lightstepToken != "":

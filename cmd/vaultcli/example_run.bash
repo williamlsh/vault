@@ -11,7 +11,6 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -grpc-addr="34.82.235.95:8080" \
   -method="hash" \
   -zipkin-reporter-url="" \
-  -zipkin-endpoint-port="" \
   -lightstep-token="" \
   -appdash-addr=""
 
@@ -21,6 +20,5 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -http-addr="https://34.82.235.95:443" \
   -method="hash" \
   -zipkin-reporter-url="" \
-  -zipkin-endpoint-port="" \
   -lightstep-token="" \
   -appdash-addr=""
