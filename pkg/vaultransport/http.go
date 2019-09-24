@@ -18,8 +18,12 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/kit/tracing/opentracing"
+	"github.com/go-kit/kit/tracing/zipkin"
 	"github.com/go-kit/kit/transport"
 	httptransport "github.com/go-kit/kit/transport/http"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"github.com/williamlsh/vault/pkg/vaultendpoint"
 	"github.com/williamlsh/vault/pkg/vaultservice"
@@ -28,11 +32,12 @@ import (
 
 // NewHTTPHandler returns an HTTP handler thant makes a set of endpoints
 // available on predefined paths.
-func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler {
+func NewHTTPHandler(endpoints vaultendpoint.Set, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) http.Handler {
 	options := []httptransport.ServerOption{
 		httptransport.ServerBefore(jwt.HTTPToContext()),
 		httptransport.ServerErrorEncoder(errorEncoder),
 		httptransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
+		zipkin.HTTPServerTrace(zipkinTracer),
 	}
 
 	m := http.NewServeMux()
@@ -40,13 +45,13 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 		endpoints.HashEndpoint,
 		decodeHTTPHashRequest,
 		encodeHTTPGenericResponse,
-		options...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Hash", logger)))...,
 	))
 	m.Handle("/validate", httptransport.NewServer(
 		endpoints.ValidateEndpoint,
 		decodeHTTPValidateRequest,
 		encodeHTTPGenericResponse,
-		options...,
+		append(options, httptransport.ServerBefore(opentracing.HTTPToContext(otTracer, "Validate", logger)))...,
 	))
 	return m
 }
@@ -55,7 +60,7 @@ func NewHTTPHandler(endpoints vaultendpoint.Set, logger log.Logger) http.Handler
 // remote instance. We expect instance to come from a service discovery system,
 // so likely of the form "host:port". We bake-in certain middleware,
 // implementing the client library pattern.
-func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, error) {
+func NewHTTPClient(instance string, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) (vaultservice.Service, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -74,14 +79,16 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 	}
 
 	options := []httptransport.ClientOption{
+		httptransport.ClientBefore(opentracing.ContextToHTTP(otTracer, logger)),
 		httptransport.ClientBefore(jwt.ContextToHTTP()),
 		httptransport.SetClient(client),
+		zipkin.HTTPClientTrace(zipkinTracer),
 	}
 
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
 
 	// Client scope JWT signer.
-	signer := jwt.NewSigner(
+	jwtSigner := jwt.NewSigner(
 		kid,
 		vaultendpoint.SigningKey,
 		stdjwt.SigningMethodHS256,
@@ -100,7 +107,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			decodeHTTPHashResponse,
 			options...,
 		).Endpoint()
-		hashEndpoint = signer(hashEndpoint)
+		hashEndpoint = opentracing.TraceClient(otTracer, "Hash")(hashEndpoint)
+		hashEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Hash")(hashEndpoint)
+		hashEndpoint = jwtSigner(hashEndpoint)
 		hashEndpoint = limiter(hashEndpoint)
 		hashEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Hash",
@@ -116,7 +125,9 @@ func NewHTTPClient(instance string, logger log.Logger) (vaultservice.Service, er
 			decodeHTTPValidateResponse,
 			options...,
 		).Endpoint()
-		validateEndpoint = signer(validateEndpoint)
+		validateEndpoint = opentracing.TraceClient(otTracer, "Validate")(validateEndpoint)
+		validateEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Validate")(validateEndpoint)
+		validateEndpoint = jwtSigner(validateEndpoint)
 		validateEndpoint = limiter(validateEndpoint)
 		validateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Validate",
