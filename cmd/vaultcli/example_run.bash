@@ -10,7 +10,7 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -tls-cert="../../testdata/server-cert.pem" \
   -grpc-addr="34.82.235.95:8080" \
   -method="hash" \
-  -zipkin-reporter-url="" \
+  -zipkin-url="http://34.82.235.95:9411/api/v2/spans" \
   -lightstep-token="" \
   -appdash-addr=""
 
@@ -19,6 +19,6 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultcli) && go run \
   -race . \
   -http-addr="https://34.82.235.95:443" \
   -method="hash" \
-  -zipkin-reporter-url="" \
+  -zipkin-url="" \
   -lightstep-token="" \
   -appdash-addr=""

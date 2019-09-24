@@ -49,7 +49,7 @@ func main() {
 		pgSslmode = flag.String("pg-sslmode", "disable", "postgreSQL database connection sslmode option")
 		pgPort    = flag.String("pg-port", "5432", "postgreSQL connection binding port")
 		// Zipkin tracer.
-		zipkinURL = flag.String("zipkin-reporter-url", "", "Enable Zipkin tracing (zipkin-go-opentracing) using a reporter URL e.g. http://localhost:9411/api/v1/spans")
+		zipkinURL = flag.String("zipkin-url", "", "Enable Zipkin tracing (zipkin-go-opentracing) using a reporter URL e.g. http://localhost:9411/api/v1/spans")
 		// Lightstep tracer.
 		lightstepToken = flag.String("lightstep-token", "", "Enable LightStep tracing via a LightStep access token")
 		// Appdash.

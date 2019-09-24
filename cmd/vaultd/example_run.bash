@@ -16,6 +16,6 @@ cd $(go list -f '{{.Dir}}' github.com/williamlsh/vault/cmd/vaultd) && go run \
   -pg-host="localhost" \
   -pg-sslmode="disable" \
   -pg-port="5432" \
-  -zipkin-reporter-url="http://zipkin:9411/api/v2/spans" \
+  -zipkin-url="http://zipkin:9411/api/v2/spans" \
   -lightstep-token="Rcd6X6kZcBfEG2Kvq4lXxuFqWhyt2cHJFWBpOQyAJQpdvBwyc2D9usKQaL/MZCkXSs5eKMNoCRa3dQOJh8tBB999aFTAEy4kwB1YF6p1" \
   -appdash-addr=""
