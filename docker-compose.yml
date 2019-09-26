@@ -1,8 +1,7 @@
 version: "3.7"
 services:
   vaultd:
-    build:
-      context: .
+    image: quay.io/williamlsh/vault
     container_name: vault
     volumes:
       - ./testdata/:/testdata/
