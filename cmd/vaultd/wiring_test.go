@@ -12,6 +12,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics/discard"
+	opentracing "github.com/opentracing/opentracing-go"
+	zipkin "github.com/openzipkin/zipkin-go"
 	"github.com/williamlsh/vault/pkg/mock"
 	"github.com/williamlsh/vault/pkg/vaultendpoint"
 	"github.com/williamlsh/vault/pkg/vaultransport"
@@ -23,9 +25,10 @@ type testcase struct {
 }
 
 func TestHTTP(t *testing.T) {
-	svc := vaultservice.New(log.NewNopLogger(), mock.NewNopStore())
-	eps := vaultendpoint.New(svc, log.NewNopLogger(), discard.NewHistogram())
-	mux := vaultransport.NewHTTPHandler(eps, log.NewNopLogger())
+	zkt, _ := zipkin.NewTracer(nil, zipkin.WithNoopTracer(true))
+	svc := vaultservice.New(log.NewNopLogger(), discard.NewCounter(), mock.NewNopStore())
+	eps := vaultendpoint.New(svc, discard.NewHistogram(), opentracing.GlobalTracer(), zkt, log.NewNopLogger())
+	mux := vaultransport.NewHTTPHandler(eps, opentracing.GlobalTracer(), zkt, log.NewNopLogger())
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
