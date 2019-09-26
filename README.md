@@ -8,6 +8,7 @@ Vault provides bcrypt based password hashing and validating services.
   - [Data Store](#Data-Store)
   - [Transport Security](#Transport-Security)
   - [Middleware](#Middleware)
+  - [Application Performance Management](#Application-Performance-Management)
   - [Client](#Client)
 - [Installation](#Installation)
 - [Usage](#Usage)
@@ -32,7 +33,15 @@ To be noted here: the auth implementation between original gRPC and go-kit gRPC 
 
 #### Middleware
 
-The service and endpoint layers both are implemented with middleware. Logging middleware for both and prometheus middleware for endpoint only but none for transport layer now.
+The service, endpoint and transport layers are all implemented with middleware both for server and client sides. Especially, logging, instrumentation, rate limit and circuit breaker middleware are applied.
+
+#### Application Performance Management
+
+APM(namely _Application Performance Management_) is implemented by middleware in server and client sides and can be easily run by docker compose. Generally, there are three domains.
+
+- Prometheus and Grafana for service metrics.
+- Kit logger for logging.
+- Zipkin and optionally Lightstep, AppDash for tracing through opentracing spec.
 
 #### Client
 
@@ -100,6 +109,10 @@ vaultcli \
 To view Prometheus metrics at:
 
 `https://localhost:8081/metrics`
+
+Alternatively, to view metrics through Grafana at:
+
+`https://localhost:3000`
 
 ### Docker Deployment
 
