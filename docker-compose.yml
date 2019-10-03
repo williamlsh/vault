@@ -110,7 +110,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - vaultnet
+      - vault_net
     restart: always
 
   grafana:
@@ -129,13 +129,13 @@ services:
       - grafana_data:/var/lib/grafana
       - ./testdata/:/testdata/
     networks:
-      - vaultnet
+      - vault_net
     restart: always
     depends_on:
       - prometheus
 
 networks:
-  vault_net:
+  vault_net: {}
 
 volumes:
   postgres_data: {}
