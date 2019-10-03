@@ -102,8 +102,40 @@ services:
       - vault_net
     restart: always
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vault_net
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_DEFAULT_INSTANCE_NAME=vaultd-prometheus-grafana
+      - GF_SECURITY_ADMIN_USER=william
+      - GF_SECURITY_ADMIN_PASSWORD=abc
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/testdata/server-cert.pem
+      - GF_SERVER_CERT_KEY=/testdata/server-key.pem
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./testdata/:/testdata/
+    networks:
+      - vault_net
+    restart: always
+    depends_on:
+      - prometheus
+
 networks:
-  vault_net:
+  vault_net: {}
 
 volumes:
   postgres_data: {}
