@@ -1,34 +1,21 @@
-# Reference: https://blog.container-solutions.com/faster-builds-in-docker-with-go-1-11
-
-FROM golang:1.12-alpine AS builder
-
-# Install tools required for project
-RUN apk --no-cache add ca-certificates git gcc g++ libc-dev
+FROM golang:1.13.1-alpine
 
 WORKDIR /go/src/github.com/williamlsh/vault/
-
-# These layers are only re-built when Go files are updated
-COPY go.mod go.sum /
-
-# Enable Go Module
-ENV GO111MODULE=on
-
-# Install library dependencies
-RUN go mod download
 
 # Copy the entire project and build it
 # This layer is rebuilt when a file changes in the project directory
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a ./cmd/vaultd
+# Enable Go Module
+ENV GO111MODULE=on
+
+RUN go install ./cmd/vaultd
 
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+COPY --from=0 /go/bin/vaultd .
 
-COPY --from=builder /go/bin/vaultd /bin/vaultd
-
-ENTRYPOINT [ "/bin/vaultd" ]
+ENTRYPOINT [ "./vaultd" ]
 
 CMD ["-http-addr=:443", "-grpc-addr=:8080", "-prom-addr=:8081", "-tls-key=/testdata/server-key.pem", "-tls-cert=/testdata/server-cert.pem", "-pg-user=postgres", "-pg-password=postgres", "-pg-dbname=postgres", "-pg-host=localhost", "-pg-sslmode=disable", "-pg-port=5432"]
 
