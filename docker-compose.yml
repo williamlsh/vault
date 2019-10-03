@@ -1,7 +1,8 @@
 version: "3.7"
 services:
   vaultd:
-    image: williamofsino/vault:latest
+    image: quay.io/williamlsh/vault
+    container_name: vault
     volumes:
       - ./testdata/:/testdata/
     ports:
@@ -11,26 +12,30 @@ services:
     environment:
       - VAULTD_LOG_LEVEL=all
     networks:
-      - vaultnet
+      - vault_net
     depends_on:
-      - db
+      - postgres
     command:
       - "-http-addr=:443"
       - "-grpc-addr=:8080"
-      - "-debug-addr=:8081"
+      - "-prom-addr=:8081"
       - "-tls-key=/testdata/server-key.pem"
       - "-tls-cert=/testdata/server-cert.pem"
       - "-pg-user=postgres"
       - "-pg-password=postgres"
       - "-pg-dbname=postgres"
-      - "-pg-host=db"
+      - "-pg-host=postgres"
       - "-pg-sslmode=disable"
       - "-pg-port=5432"
+      - "-zipkin-url=http://zipkin:9411/api/v2/spans"
+      - "-lightstep-token=Rcd6X6kZcBfEG2Kvq4lXxuFqWhyt2cHJFWBpOQyAJQpdvBwyc2D9usKQaL/MZCkXSs5eKMNoCRa3dQOJh8tBB999aFTAEy4kwB1YF6p1"
+      - "-appdash-addr="
 
-  db:
+  postgres:
     image: postgres:latest
+    container_name: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./pkg/store/.sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
     ports:
@@ -38,7 +43,64 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
     networks:
-      - vaultnet
+      - vault_net
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vault_net
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_DEFAULT_INSTANCE_NAME=vaultd-prometheus-grafana
+      - GF_SECURITY_ADMIN_USER=william
+      - GF_SECURITY_ADMIN_PASSWORD=abc
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/testdata/server-cert.pem
+      - GF_SERVER_CERT_KEY=/testdata/server-key.pem
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./testdata/:/testdata/
+    networks:
+      - vault_net
+    restart: always
+    depends_on:
+      - prometheus
+
+  # The zipkin process services the UI, and also exposes a POST endpoint that
+  # instrumentation can send trace data to. Scribe is disabled by default.
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    # Environment settings are defined here https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md#environment-variables
+    environment:
+      - STORAGE_TYPE=mem
+      # Point the zipkin at the storage backend
+      # Uncomment to enable scribe
+      # - SCRIBE_ENABLED=true
+      # Uncomment to enable self-tracing
+      # - SELF_TRACING_ENABLED=true
+      # Uncomment to enable debug logging
+      # - JAVA_OPTS=-Dlogging.level.zipkin2=DEBUG
+    ports:
+      # Port used for the Zipkin UI and HTTP Api
+      - 9411:9411
+      # Uncomment if you set SCRIBE_ENABLED=true
+      # - 9410:9410
+    networks:
+      - vault_net
+    restart: always
 
   prometheus:
     image: prom/prometheus
@@ -73,9 +135,9 @@ services:
       - prometheus
 
 networks:
-  vaultnet:
+  vault_net:
 
 volumes:
-  db-data: {}
+  postgres_data: {}
   prometheus_data: {}
   grafana_data: {}

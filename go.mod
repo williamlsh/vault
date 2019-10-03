@@ -1,6 +1,6 @@
 module github.com/williamlsh/vault
 
-go 1.13
+go 1.13.1
 
 require (
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
@@ -13,7 +13,12 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.2.0
+	github.com/lightstep/lightstep-tracer-go v0.17.0
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/opentracing/basictracer-go v1.0.0 // indirect
+	github.com/opentracing/opentracing-go v1.1.0
+	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.3
+	github.com/openzipkin/zipkin-go v0.2.2
 	github.com/prometheus/client_golang v1.1.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/prometheus/procfs v0.0.4 // indirect
@@ -26,6 +31,7 @@ require (
 	golang.org/x/sys v0.0.0-20190826190057-c7b8b68b1456 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	google.golang.org/grpc v1.22.0
+	google.golang.org/grpc v1.22.1
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0
 )

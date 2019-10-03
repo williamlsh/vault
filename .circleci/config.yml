@@ -22,7 +22,7 @@ jobs:
           command: go test -v -race -tags tests github.com/williamlsh/vault/...
       - run:
           name: Run docker compose
-          command: docker-compose -f docker-compose.yml up -d --force-recreate
+          command: docker-compose -f docker-compose.yml up -d --build --force-recreate
     filters:
       branches:
         only:

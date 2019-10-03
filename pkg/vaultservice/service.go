@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 	"github.com/williamlsh/vault/pkg/store"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,11 +21,12 @@ type vaultService struct {
 }
 
 // New makes a new service.
-func New(logger log.Logger, s store.Store) Service {
+func New(logger log.Logger, ints metrics.Counter, s store.Store) Service {
 	var svc Service
 	{
 		svc = newBasicService(logger, s)
 		svc = LoggingMiddleware(logger)(svc)
+		svc = InstrumentingMiddleware(ints)(svc)
 	}
 	return svc
 }
