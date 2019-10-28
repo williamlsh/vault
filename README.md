@@ -78,24 +78,24 @@ vaultd \
   -http-addr=":443" \
   -grpc-addr=":8080" \
   -prom-addr=":8081" \ # prometheus metrics
-  -tls-key="[KEY_FILE]" \ # private key
-  -tls-cert="[CERT_FILE]" \ # certificate
-  -pg-user="[PG_USER]" \
-  -pg-password="[PG_PASS]" \
-  -pg-dbname="[PG_DBNAME]" \
-  -pg-host="[PG_HOST]" \
-  -pg-sslmode="[PG_SSLMODE]" \
-  -pg-port="[PG_PORT]"
+  -tls-key="<KEY_FILE>" \ # private key
+  -tls-cert="<CERT_FILE>" \ # certificate
+  -pg-user="<PG_USER>" \
+  -pg-password="<PG_PASS>" \
+  -pg-dbname="<PG_DBNAME>" \
+  -pg-host="<PG_HOST>" \
+  -pg-sslmode="<PG_SSLMODE>" \
+  -pg-port="<PG_PORT>"
 ```
 
 To run gRPC client:
 
 ```bash
 vaultcli \
-  -server-name="[SERVER_NAME]" \ # localhost by default
-  -tls-cert="[CERT_FILE]" \ # certificate
+  -server-name="<SERVER_NAME>" \ # localhost by default
+  -tls-cert="<CERT_FILE>" \ # certificate
   -grpc-addr=":8080" \
-  -method="[METHOD]" # hash or validate
+  -method="<METHOD>" # hash or validate
 ```
 
 To run HTTP client:
@@ -103,7 +103,7 @@ To run HTTP client:
 ```bash
 vaultcli \
   -http-addr=":443" \
-  -method="[METHOD]" # hash or validate
+  -method="<METHOD>" # hash or validate
 ```
 
 To view Prometheus metrics at:
