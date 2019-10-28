@@ -1,4 +1,4 @@
-# Vault
+# Vault [![CircleCI](https://circleci.com/gh/williamlsh/vault.svg?style=svg)](https://circleci.com/gh/williamlsh/vault)
 
 Vault provides bcrypt based password hashing and validating services.
 
