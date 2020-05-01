@@ -5,8 +5,9 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	"github.com/williamlsh/vault/pkg/store"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/williamlsh/vault/internal/store"
 )
 
 // Service describes a service that hashes and validates passwords.

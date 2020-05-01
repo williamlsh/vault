@@ -14,10 +14,10 @@ import (
 	"github.com/go-kit/kit/metrics/discard"
 	opentracing "github.com/opentracing/opentracing-go"
 	zipkin "github.com/openzipkin/zipkin-go"
-	"github.com/williamlsh/vault/pkg/mock"
-	"github.com/williamlsh/vault/pkg/vaultendpoint"
-	"github.com/williamlsh/vault/pkg/vaultransport"
-	"github.com/williamlsh/vault/pkg/vaultservice"
+	"github.com/williamlsh/vault/internal/mock"
+	"github.com/williamlsh/vault/internal/vaultendpoint"
+	"github.com/williamlsh/vault/internal/vaultransport"
+	"github.com/williamlsh/vault/internal/vaultservice"
 )
 
 type testcase struct {

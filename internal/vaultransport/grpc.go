@@ -18,11 +18,12 @@ import (
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"github.com/williamlsh/vault/pb"
-	"github.com/williamlsh/vault/pkg/vaultendpoint"
-	"github.com/williamlsh/vault/pkg/vaultservice"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+
+	"github.com/williamlsh/vault/internal/vaultendpoint"
+	"github.com/williamlsh/vault/internal/vaultservice"
+	"github.com/williamlsh/vault/pb"
 )
 
 const (

@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/williamlsh/vault/pkg/store"
+	"github.com/williamlsh/vault/internal/store"
 )
 
 type nopStore struct{}

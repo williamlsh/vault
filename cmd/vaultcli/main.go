@@ -13,12 +13,13 @@ import (
 	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
 	"github.com/openzipkin/zipkin-go"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
-	"github.com/williamlsh/vault/pkg/vaultransport"
-	"github.com/williamlsh/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"sourcegraph.com/sourcegraph/appdash"
 	appdashot "sourcegraph.com/sourcegraph/appdash/opentracing"
+
+	"github.com/williamlsh/vault/internal/vaultransport"
+	"github.com/williamlsh/vault/internal/vaultservice"
 )
 
 const (
