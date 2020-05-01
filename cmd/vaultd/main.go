@@ -20,15 +20,16 @@ import (
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	vaultpb "github.com/williamlsh/vault/pb"
-	"github.com/williamlsh/vault/pkg/store"
-	"github.com/williamlsh/vault/pkg/vaultendpoint"
-	"github.com/williamlsh/vault/pkg/vaultransport"
-	"github.com/williamlsh/vault/pkg/vaultservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"sourcegraph.com/sourcegraph/appdash"
 	appdashot "sourcegraph.com/sourcegraph/appdash/opentracing"
+
+	"github.com/williamlsh/vault/internal/store"
+	"github.com/williamlsh/vault/internal/vaultendpoint"
+	"github.com/williamlsh/vault/internal/vaultransport"
+	"github.com/williamlsh/vault/internal/vaultservice"
+	vaultpb "github.com/williamlsh/vault/pb"
 )
 
 const vaultdLogLevel = "VAULTD_LOG_LEVEL"
