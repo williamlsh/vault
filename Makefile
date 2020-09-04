@@ -16,7 +16,7 @@ deps-reset:
 	git checkout -- go.mod
 
 deps-upgrade:
-	go get $(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all)
+	go get -v -t -u ./...
 
 deps-cleancache:
 	go clean -modcache
