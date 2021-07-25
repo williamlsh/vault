@@ -7,10 +7,9 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/golang/protobuf v1.4.3
 	github.com/gorilla/mux v1.7.4 // indirect
-	github.com/jmoiron/sqlx v1.2.0
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.9.0
 	github.com/lightstep/lightstep-tracer-go v0.25.0
-	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/opentracing/basictracer-go v1.1.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5
