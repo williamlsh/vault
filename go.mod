@@ -15,7 +15,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5
 	github.com/openzipkin/zipkin-go v0.2.5
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.11.0
 	github.com/sony/gobreaker v0.4.1
 	github.com/streadway/handy v0.0.0-20200128134331-0f66f006fb2e // indirect
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620
@@ -24,6 +24,6 @@ require (
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
 	google.golang.org/grpc v1.34.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.26.0-rc.1
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0
 )
