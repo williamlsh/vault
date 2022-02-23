@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	stdjwt "github.com/dgrijalva/jwt-go"
+	stdjwt "github.com/golang-jwt/jwt/v4"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
