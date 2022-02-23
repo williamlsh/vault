@@ -4,7 +4,8 @@ go 1.17
 
 require (
 	github.com/go-kit/kit v0.12.0
-	github.com/golang-jwt/jwt/v4 v4.0.0
+	github.com/go-kit/log v0.2.0
+	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/golang/protobuf v1.5.2
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.4
@@ -26,7 +27,6 @@ require (
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
