@@ -17,7 +17,7 @@ require (
 	github.com/sony/gobreaker v0.5.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20211028080628-e2786a622600
 )
