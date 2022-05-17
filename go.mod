@@ -8,7 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/protobuf v1.5.2
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/lib/pq v1.10.5
+	github.com/lib/pq v1.10.6
 	github.com/lightstep/lightstep-tracer-go v0.25.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5
